@@ -2,7 +2,7 @@ import setuptools
 with open("README.md", "r") as fh:
     long_description = fh.read()
 setuptools.setup(
-     name='MRIfaceDetector',  
+     name='MRIfaceDetector',
      version='0.0.1',
      long_description=open("README.md").read(),
      long_description_content_type="text/markdown",
@@ -11,9 +11,9 @@ setuptools.setup(
      install_requires = [
          'nibabel',
          'SimpleITK',
-	 'tensorflow-gpu',
-	 'numpy',
-	 'imgaug'
+         'tensorflow',
+         'numpy',
+         'imgaug'
          ],
      classifiers=[
          "Programming Language :: Python :: 3.7",
