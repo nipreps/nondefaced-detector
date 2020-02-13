@@ -32,7 +32,9 @@ label = inferer.infer(vol)
 ### Results on heldout validation set
 
 > sensitivity: 0.945
+
 > specificity: 0.949
+
 > accuracy: 0.948
 
 ### Method
