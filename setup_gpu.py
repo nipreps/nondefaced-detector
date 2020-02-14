@@ -11,7 +11,7 @@ setuptools.setup(
      install_requires = [
          'nibabel',
          'SimpleITK',
-         'tensorflow',
+         'tensorflow-gpu',
          'numpy',
          'imgaug',
          'scikit-learn'

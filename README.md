@@ -4,8 +4,11 @@ Identify non-defaced datasets before publication
 ### Installation
 `git clone git@github.com:poldracklab/mri-face-detector.git`
 
+#### For CPU devices
 `python3 setup.py install`
 
+#### For GPU devices
+`python3 setup_gpu.py install`
 
 ### Usage
 
