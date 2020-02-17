@@ -93,22 +93,9 @@ class inferer(object):
 
             _X = self.inference_generator.get_data_all(vol)
 
-            topN = 0.6
-
             predictions_all_f1 = self.model_fold1.predict(_X)
-            # Get the topN% of all predictions
-            N =  int(topN*len(predictions_all_f1))
-            predictions_all_f1 = sorted(predictions_all_f1)[-N:]
-
             predictions_all_f2 = self.model_fold2.predict(_X)
-            # Get the topN% of all predictions
-            N =  int(topN*len(predictions_all_f2))
-            predictions_all_f2 = sorted(predictions_all_f2)[-N:]
-
             predictions_all_f3 = self.model_fold3.predict(_X)
-            # Get the topN% of all predictions
-            N =  int(topN*len(predictions_all_f3))
-            predictions_all_f3 = sorted(predictions_all_f3)[-N:]
 
             predictions_all = np.squeeze(np.concatenate([predictions_all_f1,
                                                          predictions_all_f2,
