@@ -21,7 +21,7 @@ class inferer(object):
     def __init__(self,
                  nMontecarlo=8,
                  quick=False,
-                 threshold=0.5,
+                 threshold=0.7,
                  mode='avg'):
 
         inference_transform_params = {'image_size': 64,
@@ -90,11 +90,25 @@ class inferer(object):
         if conf < self.threshold:
             print(
                 f"Confidence: {conf} < threshold: {self.threshold} Re-evaluating on the entire volume")
+
             _X = self.inference_generator.get_data_all(vol)
 
+            topN = 0.6
+
             predictions_all_f1 = self.model_fold1.predict(_X)
+            # Get the topN% of all predictions
+            N =  int(topN*len(predictions_all_f1))
+            predictions_all_f1 = sorted(predictions_all_f1)[-N:]
+
             predictions_all_f2 = self.model_fold2.predict(_X)
+            # Get the topN% of all predictions
+            N =  int(topN*len(predictions_all_f2))
+            predictions_all_f2 = sorted(predictions_all_f2)[-N:]
+
             predictions_all_f3 = self.model_fold3.predict(_X)
+            # Get the topN% of all predictions
+            N =  int(topN*len(predictions_all_f3))
+            predictions_all_f3 = sorted(predictions_all_f3)[-N:]
 
             predictions_all = np.squeeze(np.concatenate([predictions_all_f1,
                                                          predictions_all_f2,
@@ -103,9 +117,13 @@ class inferer(object):
             conf_all = np.mean(predictions_all)
             pred_all = np.round(conf_all)
 
+
+            pred_str = 'faced' if pred_all == 1 else 'defaced'
             conf_all = conf_all if pred_all == 1 else 1.0 - conf_all
 
-            print(f"The confidence on entire volume is : {conf_all}")
+            print("Given volume is " + pred_str +
+                  " with confidence of: {} over the entire volume".format(conf_all))
+
 
         else:
             print("Given volume is " + pred_str +

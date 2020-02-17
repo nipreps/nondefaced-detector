@@ -40,7 +40,7 @@ class DataGeneratoronFly(object):
         data = self.coreg.register_patient(
             data, self.fixed_image).astype('float64')
         X = self.__data_generation_all(data)
-        return [X]
+        return X
 
     def _standardize_volume(self, volume, mask=None):
         """
@@ -59,7 +59,7 @@ class DataGeneratoronFly(object):
     def _normalize_volume(self, volume, mask=None, _type='MinMax'):
         """
                 volume: volume which needs to be normalized
-                mask: brain mask, only required if you prefer not to 
+                mask: brain mask, only required if you prefer not to
                         consider the effect of air in normalization
                 _type: {'Max', 'MinMax', 'Sum'}
         """
@@ -124,12 +124,10 @@ class DataGeneratoronFly(object):
 
     def _get_all_slices(self, volume):
         dimensions = volume.shape
-        x = np.random.randint(
-            dimensions[0]//5, 4*dimensions[0]//5, 4*dimensions[0]//5 - dimensions[0]//5)
-        z = np.random.randint(
-            dimensions[1]//5, 4*dimensions[1]//5, 4*dimensions[1]//5 - dimensions[1]//5)
-        y = np.random.randint(
-            dimensions[2]//5, 4*dimensions[2]//5, 4*dimensions[2]//5 - dimensions[2]//5)
+        x = list(range(dimensions[0]//5, 4*dimensions[0]//5))
+        z = list(range(dimensions[1]//5, 4*dimensions[1]//5))
+        y = list(range(dimensions[2]//5, 4*dimensions[2]//5))
+
 
         return [volume[x, :, :][..., None],
                 volume[:, y, :].transpose(1, 0, 2)[..., None],
@@ -166,3 +164,5 @@ class DataGeneratoronFly(object):
             volume = self._augmentation(volume)
 
         X = self._get_all_slices(volume)
+
+        return X
