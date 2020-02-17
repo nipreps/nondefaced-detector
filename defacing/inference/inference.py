@@ -101,18 +101,11 @@ class inferer(object):
                                                          predictions_all_f2,
                                                          predictions_all_f3],
                                                         axis=0))
-            conf_all = np.mean(predictions_all)
-            pred_all = np.round(conf_all)
+            conf = np.mean(predictions_all)
+            pred = np.round(conf)
+            pred_str = 'faced' if pred == 1 else 'defaced'
+            conf = conf if pred == 1 else 1.0 - conf
 
-
-            pred_str = 'faced' if pred_all == 1 else 'defaced'
-            conf_all = conf_all if pred_all == 1 else 1.0 - conf_all
-
-            print("Given volume is " + pred_str +
-                  " with confidence of: {} over the entire volume".format(conf_all))
-
-
-        else:
-            print("Given volume is " + pred_str +
+        print("Given volume is " + pred_str +
                   " with confidence of: {}".format(conf))
-            return pred, conf
+        return pred, conf
