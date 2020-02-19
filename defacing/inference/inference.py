@@ -91,7 +91,7 @@ class inferer(object):
             print(
                 f"Confidence: {conf} < threshold: {self.threshold} Re-evaluating on the entire volume")
 
-            _X = self.inference_generator.get_data_all(vol)
+            _X = self.inference_generator.get_data(vol, all=True)
 
             predictions_all_f1 = self.model_fold1.predict(_X)
             predictions_all_f2 = self.model_fold2.predict(_X)
