@@ -28,19 +28,16 @@ class DataGeneratoronFly(object):
         fix_path = os.path.abspath('../defacing/helpers/fixed_image.nii.gz')
         self.fixed_image = load_volume(fix_path)
 
-    def get_data(self, data):
+    def get_data(self, data, all=False):
         # Generate indexes of the batch
         data = self.coreg.register_patient(
             data, self.fixed_image).astype('float64')
+
+        if all:
+            return self.__data_generation(data, all=all)
+
         X1, X2, X3 = self.__data_generation(data)
         return [X1, X2, X3]
-
-    def get_data_all(self, data):
-        # Generate indexes of the batch
-        data = self.coreg.register_patient(
-            data, self.fixed_image).astype('float64')
-        X = self.__data_generation_all(data)
-        return X
 
     def _standardize_volume(self, volume, mask=None):
         """
@@ -133,7 +130,7 @@ class DataGeneratoronFly(object):
                 volume[:, y, :].transpose(1, 0, 2)[..., None],
                 volume[:, :, z].transpose(2, 0, 1)[..., None]]
 
-    def __data_generation(self, volume):
+    def __data_generation(self, volume, all=False):
         """
                 balanced data loader
         """
@@ -144,25 +141,12 @@ class DataGeneratoronFly(object):
 
         if self.transform:
             volume = self._augmentation(volume)
+
+        if all:
+            return self._get_all_slices(volume)
 
         X1 = self._get_random_slices(volume)
         X2 = self._get_random_slices(volume)
         X3 = self._get_random_slices(volume)
 
         return X1, X2, X3
-
-    def __data_generation_all(self, volume):
-        """
-                balanced data loader
-        """
-
-        volume = self._resizeVolume(volume)
-        volume = self._standardize_volume(volume)
-        volume = self._normalize_volume(volume)
-
-        if self.transform:
-            volume = self._augmentation(volume)
-
-        X = self._get_all_slices(volume)
-
-        return X
