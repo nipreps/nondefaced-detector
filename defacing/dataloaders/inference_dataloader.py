@@ -120,6 +120,8 @@ class DataGeneratoronFly(object):
                 volume[:, :, z].transpose(2, 0, 1)[..., None]]
 
     def _get_all_slices(self, volume):
+        """
+        """
         dimensions = volume.shape
         x = list(range(dimensions[0]//5, 4*dimensions[0]//5))
         z = list(range(dimensions[1]//5, 4*dimensions[1]//5))
@@ -132,7 +134,6 @@ class DataGeneratoronFly(object):
 
     def __data_generation(self, volume, all=False):
         """
-                balanced data loader
         """
 
         volume = self._resizeVolume(volume)
