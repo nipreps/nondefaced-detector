@@ -1,5 +1,13 @@
-# Tensorflow js for inference 
+# mri-face-detector-js
 
+## Install
 
-## Required Libraries
-+ tensorflowjs
+Install with npm :
+```
+$ npm install
+```
+
+## Run 
+```
+$ npm run watch
+```

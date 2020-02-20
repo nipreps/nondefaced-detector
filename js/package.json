@@ -1,0 +1,30 @@
+{
+    "name": "mri-face-detector",
+    "version": "1.0.0",
+    "description": "detects if a brain volume is defaced using CNN model",
+    "main": "index.js",
+    "engines": {
+        "node": ">=8.9.0"
+    },
+    "dependencies": {
+        "@tensorflow/tfjs": "^0.12.0",
+        "browserify": "^16.2.2",
+        "browserify-shim": "^3.8.14",
+        "express": "^4.16.3",
+        "jimp": "0.2.27",
+        "jslint": "^0.12.1",
+        "nifti-js": "^1.0.1",
+        "nifti-reader-js": "^0.5.4",
+        "path": "^0.12.7",
+        "sharp": "^0.24.1",
+        "watchify": "^3.11.0"
+    },
+    "scripts": {
+        "pretest": "eslint --ignore-path .gitignore .",
+        "build": "browersify src/index.js -o dist/bundle.js",
+        "watch": "watchify src/index.js -o dist/bundle.js & node src/server.js & open http://localhost:8000"
+    },
+    "keywords": [],
+    "author": "Shashank Bansal",
+    "license": "MIT"
+}
