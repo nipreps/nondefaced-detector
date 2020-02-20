@@ -8,7 +8,7 @@ from tensorflow.keras import backend as K
 from tensorflow.keras.models import load_model
 from ..models.model import custom_model
 from ..dataloaders.inference_dataloader import DataGeneratoronFly
-
+import pdb
 
 class inferer(object):
     """
@@ -55,6 +55,8 @@ class inferer(object):
                                             multiencoders=True)
             self.model_fold3.load_weights(
                 '../defacing/saved_weights/best_cv3.h5')
+        pdb.set_trace()
+
 
     def infer(self, vol):
         """
