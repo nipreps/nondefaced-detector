@@ -16,7 +16,7 @@ from vis.utils import utils
 import keras.backend as K
 import tensorflow as tf
 
-volume_path = '../sample_vols/faced/example3.nii.gz'
+volume_path = '../sample_vols/faced/example1.nii.gz'
 volume = load_volume(volume_path)
 
 
@@ -31,7 +31,7 @@ print (model.summary())
 dataloader_params = {'image_size': 64, 'nchannels': 1, 'nmontecarlo':1, 'transform':None}
 datagenerator = DataGeneratoronFly(**dataloader_params)
 X1, _, _ = datagenerator.get_data(volume)
-X2 = np.array(X1[0])
+X2 = np.array(X1[2])
 score = np.squeeze(model.predict(X2))
 print(score)
 save_path = '../cam_results'
@@ -58,6 +58,6 @@ divider = make_axes_locatable(ax)
 cax = divider.append_axes("right", size="5%", pad=0.2)
 cb = plt.colorbar(im, ax=ax, cax=cax )
 
-plt.savefig(os.path.join(save_path, 'cam_example.png'), tight_box=True)
+plt.savefig(os.path.join(save_path, 'cam_example3.png'), tight_box=True)
 print (X2.shape, grads_.shape)
 
