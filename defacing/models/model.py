@@ -22,10 +22,9 @@ def ConvBNrelu(x, filters=32, kernel=3, strides=1, padding='same'):
     return x
 
 
-def submodel(input_shape):
+def submodel(inp):
     """
     """
-    inp = layers.Input(shape=input_shape + (1,))
     conv1 = ConvBNrelu(inp, filters=8, kernel=3, strides=1, padding='same')
     conv1 = ConvBNrelu(conv1, filters=8, kernel=3, strides=1, padding='same')
     conv1 = layers.MaxPooling2D()(conv1)
@@ -39,30 +38,32 @@ def submodel(input_shape):
     conv3 = layers.MaxPooling2D()(conv3)
 
     out = layers.Flatten()(conv3)
-    model = models.Model(inp, out)
-    return model
+    return out
 
 
 def custom_model(input_shape=(32, 32), dropout=0.4, nclasses=None, multiencoders=True):
     """
     """
 
-    inp1 = layers.Input(shape=input_shape + (1,), name='sagittal')
-    inp2 = layers.Input(shape=input_shape + (1,), name='axial')
-    inp3 = layers.Input(shape=input_shape + (1,), name='corronal')
+    inp1 = layers.Input(shape=input_shape + (1,))
+    #inp2 = layers.Input(shape=input_shape + (1,), name='axial')
+    #inp3 = layers.Input(shape=input_shape + (1,), name='corronal')
 
-    sagittal = submodel(input_shape)
+    sagittal = submodel(inp1)
+    """
     if multiencoders:
-        axial = submodel(input_shape)
-        corronal = submodel(input_shape)
+        axial = submodel(inp1)
+        corronal = submodel(inp1)
 
-        merge = [sagittal(inp1), axial(inp2), corronal(inp3)]
+        merge = [sagittal, axial, corronal]
     else:
-        merge = [sagittal(inp1), sagittal(inp2), sagittal(inp3)]
+        merge = [sagittal, sagittal, sagittal]
 
     concat = layers.Add()(merge)
-    out = layers.Dense(256, activation='relu')(concat)
+    """
+    out = layers.Dense(256, activation='relu')(sagittal)
     out = layers.Dropout(dropout)(out)
 
     out = layers.Dense(1, activation='sigmoid', name='output_node')(out)
-    return models.Model(inputs=[inp1, inp2, inp3], outputs=out)
+    return models.Model(inputs=inp1, outputs=out)
+
