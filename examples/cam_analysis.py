@@ -22,16 +22,19 @@ volume = load_volume(volume_path)
 
 model_path = '../defacing/saved_weights/best_cv2.h5'
 model = custom_model(input_shape = (64,64), nclasses=2, multiencoders=True)
+"""
 session = K.get_session()
 init = tf.global_variables_initializer()
 session.run(init)
+"""
 model.load_weights(model_path, by_name=True)
 
 print (model.summary())
 dataloader_params = {'image_size': 64, 'nchannels': 1, 'nmontecarlo':1, 'transform':None}
 datagenerator = DataGeneratoronFly(**dataloader_params)
 X1, _, _ = datagenerator.get_data(volume)
-X2 = np.array(X1[2])
+X2 = np.array(X1[1])
+print (X2.shape)
 score = np.squeeze(model.predict(X2))
 print(score)
 save_path = '../cam_results'
@@ -48,7 +51,7 @@ grads_ = visualize_cam(model, -1, filter_indices=0, penultimate_layer_idx = 0,
 grads_ = np.array(grads_)
 ax = plt.subplot(gs[0,0])
 im = ax.imshow(np.rot90(np.squeeze(X2)), cmap='gray')
-im = ax.imshow(np.rot90(grads_), alpha=0.5, cmap='jet')
+im = ax.imshow(np.rot90(grads_), alpha=1, cmap='jet')
 ax.set_xticklabels([])
 ax.set_yticklabels([])
 ax.set_aspect('equal')
