@@ -52,6 +52,7 @@ def custom_model(input_shape=(32, 32), dropout=0.4, nclasses=None, multiencoders
     inp3 = layers.Input(shape=input_shape + (1,), name='corronal')
 
     sagittal = submodel(input_shape)
+    
     if multiencoders:
         axial = submodel(input_shape)
         corronal = submodel(input_shape)
@@ -61,6 +62,7 @@ def custom_model(input_shape=(32, 32), dropout=0.4, nclasses=None, multiencoders
         merge = [sagittal(inp1), sagittal(inp2), sagittal(inp3)]
 
     concat = layers.Add()(merge)
+    
     out = layers.Dense(256, activation='relu')(concat)
     out = layers.Dropout(dropout)(out)
 
