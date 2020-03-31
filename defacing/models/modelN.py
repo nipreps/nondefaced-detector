@@ -48,41 +48,75 @@ def ClassifierHead(layer, dropout):
     out = layers.Dense(1, activation='sigmoid', name='output_node')(out)
     return out
 
-def Submodel(input_shape = (32, 32), dropout = 0.4, name = 'axial'):
+def Submodel(input_shape = (32, 32), dropout = 0.4, 
+                name = 'axial', weights='axial', include_top='True', 
+                root_path = '../weights', trainable = True):
+        """
+        """
+        input_layer = layers.Input(shape=input_shape + (1,), name=name)
+        features = TruncatedSubmodel(input_layer)
+        
+        if not include_top:
+            model = models.Model(input_layer, features)
+        else:
+            classifier =  ClassifierHead(features, dropout)
+            model = models.Model(input_layer, classifier)
+        
+        if weights:
+            weights_pth = os.path.join(root_path, name, 'best-wts.h5')
+            model.load_weights(weights_pth)
+            
+        if not trainable:
+            for layer in model.layers:
+                layer.trainable = False
+
+        return model
+
+
+
+def CombinedClassifier(input_shape=(32, 32), dropout=0.4, wts_root = None, trainable = False):
     """
     """
-    input_layer = layers.Input(shape=input_shape + (1,), name=name)
-    features = TruncatedSubmodel(input_layer)
-    prob = ClassifierHead(features, dropout)
-    return models.Model(input_layer, prob)
 
+    axial_features    = Submodel(input_shape, dropout, name='axial', weights=None, include_top = False, root_path = wts_root)
+    sagittal_features = Submodel(input_shape, dropout, name='sagittal', weights=None, include_top = False, root_path = wts_root)
+    coronal_features  = Submodel(input_shape, dropout, name='coronal', weights=None, include_top = False, root_path = wts_root)
 
-def CombinedClassifier(axial_wts, coronal_wts, sagittal_wts, 
-                    input_shape=(32, 32), dropout=0.4):
-    """
-    """
-    
-    axial_layer = layers.Input(shape=input_shape + (1,), name='axial')
-    axial_features = TruncatedSubmodel(axial_layer)
-
-    coronal_layer = layers.Input(shape=input_shape + (1,), name='coronal')
-    coronal_features = TruncatedSubmodel(coronal_layer)
-    
-    sagittal_layer = layers.Input(shape=input_shape + (1,), name='sagittal')
-    sagittal_features = TruncatedSubmodel(sagittal_layer)
-
-
-    merge_features = [axial_features, sagittal_features, coronal_features]
+    merge_features = [axial_features, sagittal_features.outputs[0], coronal_features.outputs[0]]
     add_features = layers.Add()(merge_features)
     prob = ClassifierHead(add_features, dropout)
 
-    model = models.Model(inputs=[axial_layer, coronal_layer, sagittal_layer], 
-                                                outputs=prob)
+    model = models.Model(inputs=[axial_features.inputs, 
+                                    coronal_features.inputs, 
+                                    sagittal_features.inputs], 
+                                outputs=prob)
+
+    if not trainable:
+        assert wts_root == None
+        axial_model    = Submodel(input_shape, dropout, name='axial', weights='axial', include_top = True, root_path = wts_root)
+        coronal_model  = Submodel(input_shape, dropout, name='axial', weights='axial', include_top = True, root_path = wts_root)
+        sagittal_model = Submodel(input_shape, dropout, name='axial', weights='axial', include_top = True, root_path = wts_root)
+
+        for ii in range(1, len(axial_features.layers)):
+            model.layers[3*ii].set_wegihts(axial_model.layers[ii].get_weights())
+            model.layers[3*ii + 1].set_wegihts(sagittal_model.layers[ii].get_weights())
+            model.layers[3*ii + 2].set_wegihts(coronal_model.layers[ii].get_weights())
+            
+            model.layers[3*ii].trainable = False
+            model.layers[3*ii + 1].trainable = False
+            model.layers[3*ii + 1].trainable = False
+
     return model
 
-if __name__ == '__main__':
-    axial = Submodel(name='axial')
-    coronal = Submodel(name='coronal')
-    sagittal = Submodel(name='sagittal')
 
-    combined = CombinedClassifier('a', 'b', 'c')
+"""
+if __name__ == '__main__':
+    axial = Submodel(name='axial', weights=None)
+    coronal = Submodel(name='coronal', weights=None)
+    sagittal = Submodel(name='sagittal', weights = None)
+    
+    combined = CombinedClassifier()
+    print (combined.summary())
+
+"""
+
