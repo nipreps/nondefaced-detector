@@ -28,7 +28,7 @@ class DataGeneratoronFly(tf.keras.utils.Sequence):
 						batch_size=32, 
 						nchannels=1,
 						mode = 'Train',
-						name = None
+						name = None,
 						samples_per_epoch=None, 
 						transform=None):
 
@@ -74,7 +74,7 @@ class DataGeneratoronFly(tf.keras.utils.Sequence):
 		self.labels = self.labels[index]
 
 		if samples_per_epoch is None:
-			if mode == 'Train': self.samples_per_epoch = 50*len(self.paths)
+			if mode == 'Train': self.samples_per_epoch = 4*len(self.paths)
 			else: self.samples_per_epoch = len(self.paths)
 		else:
 			self.samples_per_epoch = samples_per_epoch
@@ -205,30 +205,30 @@ class DataGeneratoronFly(tf.keras.utils.Sequence):
 		nclass_batch = self.batch_size//self.nclasses
 		for i in range(nclass_batch):
 			for ii in np.unique(self.labels):
-				try:
-					pid_path = self.paths[self.labels == ii][int(index*nclass_batch + i) % self.len_arr[ii]]
-					label = ii # np.eye(self.nclasses)[ii] 
-					
-					
-					volume, affine, size = load_vol(pid_path)
-					volume = self._axis_align(volume)
-					volume = self._center_align(volume)
-					volume = self._resizeVolume(volume)
-					volume = self._standardize_volume(volume)
-					volume = self._normalize_volume(volume)
-									
-					if (self.mode.lower() == 'train') and self.transform:
-						volume = self._augmentation(volume)
-					
-					ax, sg, co = self._get_random_slices(volume)
-					
-					if ax.shape == sg.shape == co.shape: 
-						X1.append(ax)
-						X2.append(sg)
-						X3.append(co)
-						Y.append(label)
-				except:
-					continue
+				#try:
+				pid_path = self.paths[self.labels == ii][int(index*nclass_batch + i) % self.len_arr[ii]]
+				label = ii # np.eye(self.nclasses)[ii] 
+				
+				
+				volume, affine, size = load_vol(pid_path)
+				volume = self._axis_align(volume)
+				volume = self._center_align(volume)
+				volume = self._resizeVolume(volume)
+				volume = self._standardize_volume(volume)
+				volume = self._normalize_volume(volume)
+								
+				if (self.mode.lower() == 'train') and self.transform:
+					volume = self._augmentation(volume)
+				
+				ax, sg, co = self._get_random_slices(volume)
+				
+				if ax.shape == sg.shape == co.shape: 
+					X1.append(ax)
+					X2.append(sg)
+					X3.append(co)
+					Y.append(label)
+				#except:
+				# 	continue
 
 		X1, X2, X3, Y = np.array(X1), np.array(X2), np.array(X3), np.array(Y)
 
