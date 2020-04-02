@@ -1,9 +1,9 @@
 import argparse
 from tensorflow.keras.utils import multi_gpu_model
-from models.modelN import Submodel, CombinedClassifier
-from helpers.metrics import specificity, sensitivity
-from helpers.utils import *
-from dataloaders.dataloader import DataGeneratoronFly
+from ..models.modelN import Submodel, CombinedClassifier
+from ..helpers.metrics import specificity, sensitivity
+from ..helpers.utils import *
+from ..dataloaders.dataloader import DataGeneratoronFly
 from tensorflow.keras.models import load_model
 from tensorflow.keras import losses
 from tensorflow.keras import metrics
@@ -48,13 +48,13 @@ class trainer(object):
                  image_size = 64,
                  batch_size=32,
                  initial_epoch=0,
-                 n_Epochs=50,
+                 nepochs=50,
                  dropout=0.4,
                  nclasses = 2,
                  nchannels = 1,
                  gpus=0):
         
-        augmentation = iaa.SomeOf((0, 3),
+        self.augmentation = iaa.SomeOf((0, 3),
                                   [
             iaa.Fliplr(0.5),
             iaa.Flipud(0.5),
@@ -74,12 +74,13 @@ class trainer(object):
         if not os.path.exists(logdir_path):
             os.makedirs(logdir_path)
 
-
-        self.job_info_file = job_info_file
+        self.train_csv_path = train_csv_path
+        self.valid_csv_path = valid_csv_path
+       	self.job_info_file = job_info_file
         self.model_save_path = model_save_path
         self.logdir_path = logdir_path
         self.initial_epoch = initial_epoch
-        self.n_Epochs = n_Epochs
+        self.nepochs = nepochs
         self.gpus = gpus
         self.dropout = dropout
         self.batch_size = batch_size
@@ -122,13 +123,15 @@ class trainer(object):
             print("No. of training and validation batches are:",
                 self.training_generator.__len__(),
                 self.validation_generator.__len__())
-
+            
+            os.makedirs(os.path.join(self.logdir_path, name), exist_ok = True)
             self.tbCallback = TensorBoard(log_dir=self.logdir_path,
                                           histogram_freq=0,
                                           write_graph=True,
                                           write_images=False)
 
-
+            
+            os.makedirs(os.path.join(self.model_save_path, name), exist_ok = True)
             self.model_checkpoint = ModelCheckpoint(
                 os.path.join(
                     self.model_save_path,
@@ -145,7 +148,7 @@ class trainer(object):
                 model = CombinedClassifier(input_shape = (self.image_size, self.image_size), 
                                 dropout = self.dropout, wts_root = self.model_save_path)
             else:
-                lr = 1e-3
+                lr = 1e-4
                 model = Submodel(input_shape = (self.image_size, self.image_size), dropout = self.dropout, name = name,
                                 include_top = True, weights=None)
 

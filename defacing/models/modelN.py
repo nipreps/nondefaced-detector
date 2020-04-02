@@ -82,7 +82,7 @@ def CombinedClassifier(input_shape=(32, 32), dropout=0.4, wts_root = None, train
     sagittal_features = Submodel(input_shape, dropout, name='sagittal', weights=None, include_top = False, root_path = wts_root)
     coronal_features  = Submodel(input_shape, dropout, name='coronal', weights=None, include_top = False, root_path = wts_root)
 
-    merge_features = [axial_features, sagittal_features.outputs[0], coronal_features.outputs[0]]
+    merge_features = [axial_features.outputs[0], sagittal_features.outputs[0], coronal_features.outputs[0]]
     add_features = layers.Add()(merge_features)
     prob = ClassifierHead(add_features, dropout)
 
@@ -92,20 +92,20 @@ def CombinedClassifier(input_shape=(32, 32), dropout=0.4, wts_root = None, train
                                 outputs=prob)
 
     if not trainable:
-        assert wts_root == None
+        assert not (wts_root == None)
         axial_model    = Submodel(input_shape, dropout, name='axial', weights='axial', include_top = True, root_path = wts_root)
         coronal_model  = Submodel(input_shape, dropout, name='axial', weights='axial', include_top = True, root_path = wts_root)
         sagittal_model = Submodel(input_shape, dropout, name='axial', weights='axial', include_top = True, root_path = wts_root)
 
         for ii in range(1, len(axial_features.layers)):
-            model.layers[3*ii].set_wegihts(axial_model.layers[ii].get_weights())
-            model.layers[3*ii + 1].set_wegihts(sagittal_model.layers[ii].get_weights())
-            model.layers[3*ii + 2].set_wegihts(coronal_model.layers[ii].get_weights())
+            model.layers[3*ii].set_weights(axial_model.layers[ii].get_weights())
+            model.layers[3*ii + 1].set_weights(sagittal_model.layers[ii].get_weights())
+            model.layers[3*ii + 2].set_weights(coronal_model.layers[ii].get_weights())
             
             model.layers[3*ii].trainable = False
             model.layers[3*ii + 1].trainable = False
             model.layers[3*ii + 1].trainable = False
-
+    print (model.summary())
     return model
 
 
