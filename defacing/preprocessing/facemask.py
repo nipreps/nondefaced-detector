@@ -42,7 +42,7 @@ def augment(in_file, facemask, masked_value=0):
         if flip_ap:
             newmask = np.flip(newmask, axis=ap)
         for j, flip_si in enumerate((False, True)):
-            if flip_ap:
+            if flip_si:
                 newmask = np.flip(newmask, axis=si)
 
             # Apply mask
