@@ -5,7 +5,7 @@ import numpy as np
 import nibabel as nb
 
 
-def augment(in_file, facemask):
+def augment(in_file, facemask, masked_value=0):
     """
     Generate augmentations from (MRI, face mask) pairs, where the face mask is mis-oriented.
 
@@ -27,7 +27,7 @@ def augment(in_file, facemask):
         facemask = nb.load(facemask)
 
     data = np.asanyarray(in_file.dataobj)
-    msk = np.asanyarray(facemask.dataobj) > 0
+    msk = np.asanyarray(facemask.dataobj) == masked_value
     mskhdr = facemask.header.copy()
     mskhdr.set_data_dtype("uint8")
 
@@ -60,8 +60,10 @@ def augment(in_file, facemask):
 def _boundingbox(mask):
     """Calculate the bounding box of a given binary mask."""
     bbox = np.argwhere(mask)
+    min_vox = bbox.min(0)
+    max_vox = bbox.max(0)
     return mask[
-        bbox.min(0):bbox.max(0),
-        bbox.min(1):bbox.max(1),
-        bbox.min(2):bbox.max(2)
+        min_vox[0]:max_vox[0],
+        min_vox[1]:max_vox[1],
+        min_vox[2]:max_vox[2]
     ]
