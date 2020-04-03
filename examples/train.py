@@ -1,5 +1,5 @@
 import os, sys
-from datetime import datetime
+import datetime
 import numpy as np
 import random
 import timeit
@@ -10,7 +10,7 @@ sys.path.append('..')
 from defacing.training.training import trainer
 from defacing.helpers.utils import get_available_gpus
 from distutils.dir_util import copy_tree
-
+import tensorflow as tf
 
 list_gpu = get_available_gpus()
 n_gpu = len(list_gpu)
@@ -35,7 +35,7 @@ for fold in nfolds:
 	dir_path = './Logs/' + args.job_name + '/train_test_fold_{}/csv/'.format(fold)
 
 	# currently a very hacky way of doing this -- will need to fix later
-	from_dir = os.path.abspath('./csv/' + '/train_test_fold_{}/csv/'.format(fold))
+	from_dir = os.path.abspath('./csv/faced_defaced/train_test_fold_{}/csv/'.format(fold))
 	to_dir = dir_path
 	copy_tree(from_dir, to_dir)
 
@@ -71,14 +71,14 @@ for fold in nfolds:
 			valid_csv_path,
 			basic_job_info,
 			model_path,
-			image_size = 64,
+			image_size = 32,
 			batch_size = 8,
 			initial_epoch = 0,
 			nepochs = 25,
 			dropout = 0.4,
 			nclasses = 2,
 			nchannels = 1,
-			gpus = 0)
+			gpus = 4)
 	train.train()
 
 	elapsed = timeit.default_timer() - t0
