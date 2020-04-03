@@ -1,5 +1,4 @@
-import os
-import sys
+import os, sys
 sys.path.append('..')
 from defacing.helpers.utils import load_vol
 
@@ -7,8 +6,15 @@ import numpy as np
 import pandas as pd
 from glob import glob
 
+orig_data_face = '/work/01329/poldrack/data/mriqc-net/face/T1w'
+orig_data_deface = '/work/01329/poldrack/data/mriqc-net/defaced'
+
+regis_data_face = '/work/06595/kavinash/mriqc-shared-directory/Registered/face'
+regis_data_deface = '/work/06595/kavinash/mriqc-shared-directory/Registered/defaced'
+
+
 faced_path = []
-for pth in glob('/work/01329/poldrack/data/mriqc-net/face/T1w/*/*.nii.gz'):
+for pth in glob(regis_data_face + '/*/*.nii.gz'):
     if not pth.__contains__('edge'):
         try:
             load_vol(pth)
