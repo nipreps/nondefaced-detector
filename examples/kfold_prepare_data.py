@@ -1,10 +1,29 @@
 import os
+import sys
+sys.path.append('..')
+from defacing.helpers.utils import load_vol
+
 import numpy as np
 import pandas as pd
 from glob import glob
 
-faced_path = [pth for pth in glob('/work/01329/poldrack/data/mriqc-net/face/T1w/*/*.nii.gz') if not pth.__contains__('edge')] 
-defaced_path = [pth for pth in glob('/work/01329/poldrack/data/mriqc-net/defaced/*/*.nii.gz') if not pth.__contains__('edge') ]
+faced_path = []
+for pth in glob('/work/01329/poldrack/data/mriqc-net/face/T1w/*/*.nii.gz'):
+    if not pth.__contains__('edge'):
+        try:
+            load_vol(pth)
+            faced_path.append(pth)
+        except: pass
+
+defaced_path = []
+for pth in glob('/work/01329/poldrack/data/mriqc-net/defaced/*/*.nii.gz'):
+    if not pth.__contains__('edge'):
+        try:
+            load_vol(pth)
+            defaced_path.append(pth)
+        except: pass
+
+
 save_path = './csv/faced_defaced'
 
 os.makedirs(save_path, exist_ok=True)

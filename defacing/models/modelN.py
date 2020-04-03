@@ -50,27 +50,27 @@ def ClassifierHead(layer, dropout):
 
 def Submodel(input_shape = (32, 32), dropout = 0.4, 
                 name = 'axial', weights='axial', include_top='True', 
-                root_path = '../weights', trainable = True):
-        """
-        """
-        input_layer = layers.Input(shape=input_shape + (1,), name=name)
-        features = TruncatedSubmodel(input_layer)
+                root_path = None, trainable = True):
+    """
+    """
+    input_layer = layers.Input(shape=input_shape + (1,), name=name)
+    features = TruncatedSubmodel(input_layer)
+    
+    if not include_top:
+        model = models.Model(input_layer, features)
+    else:
+        classifier =  ClassifierHead(features, dropout)
+        model = models.Model(input_layer, classifier)
+    
+    if weights:
+        weights_pth = os.path.join(root_path, name, 'best-wts.h5')
+        model.load_weights(weights_pth)
         
-        if not include_top:
-            model = models.Model(input_layer, features)
-        else:
-            classifier =  ClassifierHead(features, dropout)
-            model = models.Model(input_layer, classifier)
-        
-        if weights:
-            weights_pth = os.path.join(root_path, name, 'best-wts.h5')
-            model.load_weights(weights_pth)
-            
-        if not trainable:
-            for layer in model.layers:
-                layer.trainable = False
+    if not trainable:
+        for layer in model.layers:
+            layer.trainable = False
 
-        return model
+    return model
 
 
 
