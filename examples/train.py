@@ -23,12 +23,12 @@ parser.add_argument('-jn', '--job_name', required=True, type=str, help="The job 
 args = parser.parse_args()
 
 t0 = timeit.default_timer()
-# os.environ["CUDA_VISIBLE_DEVICES"] = args.GPU
+os.environ["CUDA_VISIBLE_DEVICES"] = args.GPU
 print ("GPU Availability: ", tf.test.is_gpu_available(cuda_only=True, min_cuda_compute_capability=None))
 
 
-Kfolds = 10
-nfolds = list(range(1, Kfolds + 1))
+Kfolds = -1
+nfolds = list(range(0, Kfolds + 1))
 
 for fold in nfolds:
 	root_dir = './Logs/' + args.job_name + '/train_test_fold_{}'.format(fold)
@@ -72,15 +72,69 @@ for fold in nfolds:
 			basic_job_info,
 			model_path,
 			image_size = 32,
-			batch_size = 8,
+			batch_size = 32,
 			initial_epoch = 0,
-			nepochs = 25,
-			dropout = 0.4,
+			nepochs = 15,
+			dropout = 0.2,
 			nclasses = 2,
 			nchannels = 1,
-			gpus = 4)
+			gpus = n_gpu)
 	train.train()
 
 	elapsed = timeit.default_timer() - t0
 	print('Time: {:.3f} min'.format(elapsed / 60))
 	del train
+
+############################################ final model training #################################################
+print ("Training final model")
+root_dir = './Logs/' + args.job_name + '/train_test'
+dir_path = './Logs/' + args.job_name + '/train_test/csv/'
+
+# currently a very hacky way of doing this -- will need to fix later
+from_dir = os.path.abspath('./csv/faced_defaced')
+
+train_csv_path = os.path.join(from_dir, 'all.csv')
+valid_csv_path = os.path.join(from_dir, 'all.csv')
+
+# Model Path
+model_path = root_dir + '/' + args.job_name
+
+
+# create a path to where the model will be saved
+if not os.path.exists(root_dir):
+    os.makedirs(root_dir)
+
+if not os.path.exists(dir_path):
+    os.makedirs(dir_path)
+
+if not os.path.exists(model_path):
+    os.makedirs(model_path)
+
+# basic job info text file to identify jobs
+basic_job_info = os.path.join(os.path.abspath(root_dir), 'job_info.txt')
+with open(basic_job_info, 'w') as f:
+    f.write("Jobname: %s\n" % args.job_name)
+    f.write("Created on: %s\n" % str(datetime.datetime.now()))
+    f.write("Created by: %s\n" % str(getpass.getuser()))
+    f.write("Model store path: %s\n" % os.path.abspath(model_path))
+    f.write("GPU Availability: %s\n" % str(tf.test.is_gpu_available(cuda_only=True, min_cuda_compute_capability=None)))
+    f.write("Available GPUs: %s\n" % (','.join(list_gpu)))
+
+
+train = trainer(train_csv_path,
+		valid_csv_path,
+		basic_job_info,
+		model_path,
+		image_size = 32,
+		batch_size = 32,
+		initial_epoch = 0,
+		nepochs = 15,
+		dropout = 0.2,
+		nclasses = 2,
+		nchannels = 1,
+		gpus = n_gpu)
+train.train()
+
+elapsed = timeit.default_timer() - t0
+print('Time: {:.3f} min'.format(elapsed / 60))
+del train

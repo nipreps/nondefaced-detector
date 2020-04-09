@@ -6,7 +6,7 @@ import timeit
 
 from tensorflow.keras import backend as K
 from tensorflow.keras.models import load_model
-from ..models.model import custom_model
+from ..models.modelN import CombinedClassifier
 from ..dataloaders.inference_dataloader import DataGeneratoronFly
 
 
@@ -20,7 +20,6 @@ class inferer(object):
 
     def __init__(self,
                  nMontecarlo=8,
-                 quick=False,
                  threshold=0.7,
                  mode='avg'):
         inference_transform_params = {'image_size': 64,
@@ -37,25 +36,12 @@ class inferer(object):
 
         self.inference_generator = DataGeneratoronFly(
             **inference_transform_params)
-        self.model_fold1 = custom_model(input_shape=(64, 64),
-                                        nclasses=2,
-                                        multiencoders=True)
+        self.model_fold1 = CombinedClassifier(input_shape=(32, 32), 
+                                               dropout=0.4, 
+                                               wts_root = None, 
+                                               trainable = True)
         self.model_fold1.load_weights(os.path.abspath(
-            '../defacing/saved_weights/best_cv1.h5'))
-
-        if not self.quick:
-            self.model_fold2 = custom_model(input_shape=(64, 64),
-                                            nclasses=2,
-                                            multiencoders=True)
-            self.model_fold2.load_weights(
-                '../defacing/saved_weights/best_cv2.h5')
-
-            self.model_fold3 = custom_model(input_shape=(64, 64),
-                                            nclasses=2,
-                                            multiencoders=True)
-            self.model_fold3.load_weights(
-                '../defacing/saved_weights/best_cv3.h5')
-
+            '../defacing/saved_weights/best.h5'))
 
 
     def infer(self, vol):
@@ -65,13 +51,6 @@ class inferer(object):
         X1, X2, X3 = self.inference_generator.get_data(vol)
         predictions = self.model_fold1.predict(X1)
 
-        if not self.quick:
-            prediction_fold2 = self.model_fold2.predict(X2)
-            prediction_fold3 = self.model_fold3.predict(X3)
-
-            predictions = np.squeeze(np.concatenate([predictions,
-                                                     prediction_fold2,
-                                                     prediction_fold3], axis=0))
         if self.mode.lower() == 'max_vote':
             predictions = np.round(predictions)
             unique_elements = np.unique(predictions)

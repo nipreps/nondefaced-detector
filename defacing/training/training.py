@@ -1,17 +1,16 @@
 import argparse
-from tensorflow.keras.utils import multi_gpu_model
+from keras.utils import multi_gpu_model
 from ..models.modelN import Submodel, CombinedClassifier
 from ..helpers.metrics import specificity, sensitivity
 from ..helpers.utils import *
 from ..dataloaders.dataloader import DataGeneratoronFly
-from tensorflow.keras.models import load_model
-from tensorflow.keras import losses
-from tensorflow.keras import metrics
-from tensorflow.keras.callbacks import ModelCheckpoint, LearningRateScheduler, TensorBoard
-from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.losses import binary_crossentropy,mse
+from keras.models import load_model
+from keras import losses, metrics
+from keras.callbacks import ModelCheckpoint, LearningRateScheduler, TensorBoard
+from keras.optimizers import Adam
+from keras.losses import binary_crossentropy,mse
 from imgaug import augmenters as iaa
-from tensorflow.keras import backend as K
+from keras import backend as K
 import os
 import sys
 from datetime import datetime
@@ -170,8 +169,7 @@ class trainer(object):
         try:
             # pass
             model = multi_gpu_model(
-                model, gpus=len(
-                    self.gpus), cpu_relocation=True)
+                model, gpus=self.gpus, cpu_relocation=True)
             print("Training using multiple GPUs..")
         except BaseException:
             print("Training using single GPU or CPU..")
@@ -179,7 +177,7 @@ class trainer(object):
         print(model.summary())
         
         model.compile(loss = 'binary_crossentropy', 
-                        optimizer =Adam(lr=lr, amsgrad=True), 
+                        optimizer = 'adam', # Adam(lr=lr, amsgrad=True), 
                         metrics=['accuracy',
                                     sensitivity, 
                                     specificity])
@@ -187,8 +185,10 @@ class trainer(object):
         model.fit_generator(
             generator=dataloaders[0],
             epochs=self.nepochs,
+            steps_per_epoch = dataloaders[0].__len__(),
             verbose=1,
             validation_data=dataloaders[1],
+            validation_steps = dataloaders[1].__len__(),
             callbacks=[
                 self.tbCallback,
                 self.model_checkpoint],
