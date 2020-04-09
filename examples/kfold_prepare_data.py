@@ -22,7 +22,7 @@ for pth in glob(regis_data_face + '/*/*.nii.gz'):
         except: pass
 
 defaced_path = []
-for pth in glob('/work/01329/poldrack/data/mriqc-net/defaced/*/*.nii.gz'):
+for pth in glob(regis_data_deface + '/*/*.nii.gz'):
     if not pth.__contains__('edge'):
         try:
             load_vol(pth)

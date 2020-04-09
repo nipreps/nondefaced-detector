@@ -1,0 +1,104 @@
+
+Inactive Modules:
+  1) python2
+
+The following have been reloaded with a version change:
+  1) cmake/3.10.2 => cmake/3.16.1     3) impi/18.0.2 => impi/17.0.3
+  2) git/2.12.2 => git/2.24.1         4) intel/18.0.2 => intel/17.0.4
+
+rm: cannot remove ‘/home1/06595/kavinash/.Logs’: No such file or directory
+2020-04-09 00:25:30.293278: I tensorflow/core/platform/cpu_feature_guard.cc:142] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 FMA
+2020-04-09 00:25:30.393077: I tensorflow/stream_executor/platform/default/dso_loader.cc:42] Successfully opened dynamic library libcuda.so.1
+2020-04-09 00:25:30.589854: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0x5775c80 executing computations on platform CUDA. Devices:
+2020-04-09 00:25:30.589950: I tensorflow/compiler/xla/service/service.cc:175]   StreamExecutor device (0): GeForce GTX 1080 Ti, Compute Capability 6.1
+2020-04-09 00:25:30.632592: I tensorflow/core/platform/profile_utils/cpu_utils.cc:94] CPU Frequency: 2099995000 Hz
+2020-04-09 00:25:30.633516: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0x5863470 executing computations on platform Host. Devices:
+2020-04-09 00:25:30.633619: I tensorflow/compiler/xla/service/service.cc:175]   StreamExecutor device (0): <undefined>, <undefined>
+2020-04-09 00:25:30.636459: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1640] Found device 0 with properties: 
+name: GeForce GTX 1080 Ti major: 6 minor: 1 memoryClockRate(GHz): 1.582
+pciBusID: 0000:02:00.0
+2020-04-09 00:25:30.641410: I tensorflow/stream_executor/platform/default/dso_loader.cc:42] Successfully opened dynamic library libcudart.so.10.0
+2020-04-09 00:25:30.712766: I tensorflow/stream_executor/platform/default/dso_loader.cc:42] Successfully opened dynamic library libcublas.so.10.0
+2020-04-09 00:25:30.748315: I tensorflow/stream_executor/platform/default/dso_loader.cc:42] Successfully opened dynamic library libcufft.so.10.0
+2020-04-09 00:25:30.760922: I tensorflow/stream_executor/platform/default/dso_loader.cc:42] Successfully opened dynamic library libcurand.so.10.0
+2020-04-09 00:25:30.845837: I tensorflow/stream_executor/platform/default/dso_loader.cc:42] Successfully opened dynamic library libcusolver.so.10.0
+2020-04-09 00:25:30.905779: I tensorflow/stream_executor/platform/default/dso_loader.cc:42] Successfully opened dynamic library libcusparse.so.10.0
+2020-04-09 00:25:31.055738: I tensorflow/stream_executor/platform/default/dso_loader.cc:42] Successfully opened dynamic library libcudnn.so.7
+2020-04-09 00:25:31.059799: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1763] Adding visible gpu devices: 0
+2020-04-09 00:25:31.060982: I tensorflow/stream_executor/platform/default/dso_loader.cc:42] Successfully opened dynamic library libcudart.so.10.0
+2020-04-09 00:25:31.065044: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1181] Device interconnect StreamExecutor with strength 1 edge matrix:
+2020-04-09 00:25:31.065080: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1187]      0 
+2020-04-09 00:25:31.065104: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1200] 0:   N 
+2020-04-09 00:25:31.070627: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1326] Created TensorFlow device (/device:GPU:0 with 10481 MB memory) -> physical GPU (device: 0, name: GeForce GTX 1080 Ti, pci bus id: 0000:02:00.0, compute capability: 6.1)
+2020-04-09 00:25:31.076578: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1640] Found device 0 with properties: 
+name: GeForce GTX 1080 Ti major: 6 minor: 1 memoryClockRate(GHz): 1.582
+pciBusID: 0000:02:00.0
+2020-04-09 00:25:31.076637: I tensorflow/stream_executor/platform/default/dso_loader.cc:42] Successfully opened dynamic library libcudart.so.10.0
+2020-04-09 00:25:31.076674: I tensorflow/stream_executor/platform/default/dso_loader.cc:42] Successfully opened dynamic library libcublas.so.10.0
+2020-04-09 00:25:31.076708: I tensorflow/stream_executor/platform/default/dso_loader.cc:42] Successfully opened dynamic library libcufft.so.10.0
+2020-04-09 00:25:31.076740: I tensorflow/stream_executor/platform/default/dso_loader.cc:42] Successfully opened dynamic library libcurand.so.10.0
+2020-04-09 00:25:31.076793: I tensorflow/stream_executor/platform/default/dso_loader.cc:42] Successfully opened dynamic library libcusolver.so.10.0
+2020-04-09 00:25:31.076841: I tensorflow/stream_executor/platform/default/dso_loader.cc:42] Successfully opened dynamic library libcusparse.so.10.0
+2020-04-09 00:25:31.076872: I tensorflow/stream_executor/platform/default/dso_loader.cc:42] Successfully opened dynamic library libcudnn.so.7
+2020-04-09 00:25:31.079092: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1763] Adding visible gpu devices: 0
+2020-04-09 00:25:31.079128: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1181] Device interconnect StreamExecutor with strength 1 edge matrix:
+2020-04-09 00:25:31.079148: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1187]      0 
+2020-04-09 00:25:31.079163: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1200] 0:   N 
+2020-04-09 00:25:31.081913: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1326] Created TensorFlow device (/device:GPU:0 with 10481 MB memory) -> physical GPU (device: 0, name: GeForce GTX 1080 Ti, pci bus id: 0000:02:00.0, compute capability: 6.1)
+2020-04-09 00:25:31.121541: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1640] Found device 0 with properties: 
+name: GeForce GTX 1080 Ti major: 6 minor: 1 memoryClockRate(GHz): 1.582
+pciBusID: 0000:02:00.0
+2020-04-09 00:25:31.121597: I tensorflow/stream_executor/platform/default/dso_loader.cc:42] Successfully opened dynamic library libcudart.so.10.0
+2020-04-09 00:25:31.121634: I tensorflow/stream_executor/platform/default/dso_loader.cc:42] Successfully opened dynamic library libcublas.so.10.0
+2020-04-09 00:25:31.121666: I tensorflow/stream_executor/platform/default/dso_loader.cc:42] Successfully opened dynamic library libcufft.so.10.0
+2020-04-09 00:25:31.121697: I tensorflow/stream_executor/platform/default/dso_loader.cc:42] Successfully opened dynamic library libcurand.so.10.0
+2020-04-09 00:25:31.121728: I tensorflow/stream_executor/platform/default/dso_loader.cc:42] Successfully opened dynamic library libcusolver.so.10.0
+2020-04-09 00:25:31.121759: I tensorflow/stream_executor/platform/default/dso_loader.cc:42] Successfully opened dynamic library libcusparse.so.10.0
+2020-04-09 00:25:31.121789: I tensorflow/stream_executor/platform/default/dso_loader.cc:42] Successfully opened dynamic library libcudnn.so.7
+2020-04-09 00:25:31.126305: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1763] Adding visible gpu devices: 0
+2020-04-09 00:25:31.126342: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1181] Device interconnect StreamExecutor with strength 1 edge matrix:
+2020-04-09 00:25:31.126362: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1187]      0 
+2020-04-09 00:25:31.126377: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1200] 0:   N 
+2020-04-09 00:25:31.131629: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1326] Created TensorFlow device (/device:GPU:0 with 10481 MB memory) -> physical GPU (device: 0, name: GeForce GTX 1080 Ti, pci bus id: 0000:02:00.0, compute capability: 6.1)
+2020-04-09 00:25:31.320143: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1640] Found device 0 with properties: 
+name: GeForce GTX 1080 Ti major: 6 minor: 1 memoryClockRate(GHz): 1.582
+pciBusID: 0000:02:00.0
+2020-04-09 00:25:31.320245: I tensorflow/stream_executor/platform/default/dso_loader.cc:42] Successfully opened dynamic library libcudart.so.10.0
+2020-04-09 00:25:31.320284: I tensorflow/stream_executor/platform/default/dso_loader.cc:42] Successfully opened dynamic library libcublas.so.10.0
+2020-04-09 00:25:31.320316: I tensorflow/stream_executor/platform/default/dso_loader.cc:42] Successfully opened dynamic library libcufft.so.10.0
+2020-04-09 00:25:31.320348: I tensorflow/stream_executor/platform/default/dso_loader.cc:42] Successfully opened dynamic library libcurand.so.10.0
+2020-04-09 00:25:31.320379: I tensorflow/stream_executor/platform/default/dso_loader.cc:42] Successfully opened dynamic library libcusolver.so.10.0
+2020-04-09 00:25:31.320421: I tensorflow/stream_executor/platform/default/dso_loader.cc:42] Successfully opened dynamic library libcusparse.so.10.0
+2020-04-09 00:25:31.320454: I tensorflow/stream_executor/platform/default/dso_loader.cc:42] Successfully opened dynamic library libcudnn.so.7
+2020-04-09 00:25:31.322516: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1763] Adding visible gpu devices: 0
+2020-04-09 00:25:31.324351: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1640] Found device 0 with properties: 
+name: GeForce GTX 1080 Ti major: 6 minor: 1 memoryClockRate(GHz): 1.582
+pciBusID: 0000:02:00.0
+2020-04-09 00:25:31.324404: I tensorflow/stream_executor/platform/default/dso_loader.cc:42] Successfully opened dynamic library libcudart.so.10.0
+2020-04-09 00:25:31.324439: I tensorflow/stream_executor/platform/default/dso_loader.cc:42] Successfully opened dynamic library libcublas.so.10.0
+2020-04-09 00:25:31.324471: I tensorflow/stream_executor/platform/default/dso_loader.cc:42] Successfully opened dynamic library libcufft.so.10.0
+2020-04-09 00:25:31.324502: I tensorflow/stream_executor/platform/default/dso_loader.cc:42] Successfully opened dynamic library libcurand.so.10.0
+2020-04-09 00:25:31.324539: I tensorflow/stream_executor/platform/default/dso_loader.cc:42] Successfully opened dynamic library libcusolver.so.10.0
+2020-04-09 00:25:31.324571: I tensorflow/stream_executor/platform/default/dso_loader.cc:42] Successfully opened dynamic library libcusparse.so.10.0
+2020-04-09 00:25:31.324602: I tensorflow/stream_executor/platform/default/dso_loader.cc:42] Successfully opened dynamic library libcudnn.so.7
+2020-04-09 00:25:31.326664: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1763] Adding visible gpu devices: 0
+2020-04-09 00:25:31.326707: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1181] Device interconnect StreamExecutor with strength 1 edge matrix:
+2020-04-09 00:25:31.326727: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1187]      0 
+2020-04-09 00:25:31.326742: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1200] 0:   N 
+2020-04-09 00:25:31.329300: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1326] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 10481 MB memory) -> physical GPU (device: 0, name: GeForce GTX 1080 Ti, pci bus id: 0000:02:00.0, compute capability: 6.1)
+Using TensorFlow backend.
+WARNING:tensorflow:From /home1/06595/kavinash/.local/lib/python3.6/site-packages/tensorflow/python/ops/math_grad.py:1250: add_dispatch_support.<locals>.wrapper (from tensorflow.python.ops.array_ops) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use tf.where in 2.0, which has the same broadcast rule as np.where
+2020-04-09 00:26:07.062540: I tensorflow/stream_executor/platform/default/dso_loader.cc:42] Successfully opened dynamic library libcublas.so.10.0
+2020-04-09 00:26:07.738569: I tensorflow/stream_executor/platform/default/dso_loader.cc:42] Successfully opened dynamic library libcudnn.so.7
+2020-04-09 00:26:10.018495: I tensorflow/core/profiler/lib/profiler_session.cc:174] Profiler session started.
+2020-04-09 00:26:10.044540: I tensorflow/stream_executor/platform/default/dso_loader.cc:42] Successfully opened dynamic library libcupti.so.10.0
+2020-04-09 00:26:10.411959: I tensorflow/core/platform/default/device_tracer.cc:641] Collecting 454 kernel records, 102 memcpy records.
+WARNING:tensorflow:Method (on_train_batch_end) is slow compared to the batch update (0.197379). Check your callbacks.
+2020-04-09 02:07:13.008960: I tensorflow/core/profiler/lib/profiler_session.cc:174] Profiler session started.
+2020-04-09 02:07:13.078115: I tensorflow/core/platform/default/device_tracer.cc:641] Collecting 454 kernel records, 102 memcpy records.
+2020-04-09 03:45:07.798825: I tensorflow/core/profiler/lib/profiler_session.cc:174] Profiler session started.
+2020-04-09 03:45:07.865478: I tensorflow/core/platform/default/device_tracer.cc:641] Collecting 454 kernel records, 102 memcpy records.
+2020-04-09 05:21:32.200067: I tensorflow/core/profiler/lib/profiler_session.cc:174] Profiler session started.
+2020-04-09 05:21:32.274933: I tensorflow/core/platform/default/device_tracer.cc:641] Collecting 548 kernel records, 128 memcpy records.
