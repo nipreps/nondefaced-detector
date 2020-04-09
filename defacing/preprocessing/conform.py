@@ -6,7 +6,7 @@ import nibabel as nb
 from scipy.ndimage import map_coordinates
 
 
-def conform_dataset(in_file, out_file=None, out_size=(256, 256, 256), order=3):
+def conform_data(in_file, out_file=None, out_size=(256, 256, 256), order=3):
     r"""
     Conform the input dataset to the canonical orientation.
 
@@ -52,6 +52,7 @@ def conform_dataset(in_file, out_file=None, out_size=(256, 256, 256), order=3):
     ).reshape(out_size)
     resampled[resampled < 0] = 0
 
+    """
     # Create a new x-form affine, aligned with cardinal axes, 1mm3 and centered.
     newaffine = np.eye(4)
     newaffine[:3, 3] = -0.5 * (np.array(out_size) - 1)
@@ -61,4 +62,5 @@ def conform_dataset(in_file, out_file=None, out_size=(256, 256, 256), order=3):
     out_file = Path(out_file).absolute()
 
     nii.to_filename(out_file)
-    return out_file
+    """
+    return out_file, resampled

@@ -22,12 +22,11 @@ class inferer(object):
                  nMontecarlo=8,
                  threshold=0.7,
                  mode='avg'):
-        inference_transform_params = {'image_size': 64,
+        inference_transform_params = {'image_size': 32,
                                       'nchannels': 1,
                                       'nmontecarlo': nMontecarlo,
                                       'transform': None
                                       }
-        self.quick = quick
         self.mode = mode
         self.threshold = threshold
 
