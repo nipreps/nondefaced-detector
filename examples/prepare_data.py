@@ -21,7 +21,7 @@ def preprocess(pth):
     """
     """
     filename = pth.split('/')[-1]
-    volume = conform_data(pth, conform_size)
+    volume,_ = conform_data(pth, conform_size)
 
     volume = normalize_volume(standardize_volume(volume))    
     save_path = os.path.join(save_data_face, filename)
@@ -31,3 +31,13 @@ def preprocess(pth):
     nii = nib.Nifti1Image(volume, newaffine, None)
     nii.to_filename(save_path)
     return save_path
+
+for path in glob(orig_data_face+'/*/*.nii.gz'):
+    try:
+        print(preprocess(path))
+    except: pass
+
+for path in glob(orig_data_deface+'/*/*.nii.gz'):
+    try:
+        print(preprocess(path))
+     except: pass
