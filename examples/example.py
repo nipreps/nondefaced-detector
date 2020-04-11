@@ -5,6 +5,6 @@ from defacing.inference import inferer
 
 _inferer = inferer(threshold=0.7)
 path = '../sample_vols/faced/example2.nii.gz'
-vol = load_volume(path)
-label, conf = _inferer.infer(vol)
+# vol = load_volume(path)
+label, conf = _inferer.infer(path)
 
