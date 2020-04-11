@@ -53,7 +53,9 @@ def augment(in_file, facemask, masked_value=0):
             out_mask = retdir / f"facemsk{i:02}{j:02}.nii.gz"
             retval.append((out_file, out_mask))
             nb.Nifti1Image(newmask, facemask.affine, mskhdr).to_filename(out_mask)
-            nb.Nifti1Image(defaced, in_file.affine, in_file.header).to_filename(out_file)
+            nb.Nifti1Image(defaced, in_file.affine, in_file.header).to_filename(
+                out_file
+            )
     return retval
 
 
@@ -63,7 +65,5 @@ def _boundingbox(mask):
     min_vox = bbox.min(0)
     max_vox = bbox.max(0)
     return mask[
-        min_vox[0]:max_vox[0],
-        min_vox[1]:max_vox[1],
-        min_vox[2]:max_vox[2]
+        min_vox[0] : max_vox[0], min_vox[1] : max_vox[1], min_vox[2] : max_vox[2]
     ]
