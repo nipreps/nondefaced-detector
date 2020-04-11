@@ -30,9 +30,9 @@ class DataGeneratoronFly(object):
 
     def get_data(self, data, all=False):
         # Generate indexes of the batch
-        data = self.coreg.register_patient(
-            data, self.fixed_image).astype('float64')
-        # _, data = conform_data(data)
+        # data = self.coreg.register_patient(
+        #    data, self.fixed_image).astype('float64')
+        _, data = conform_data(data)
         if all:
             return self.__data_generation(data, all=all)
 
