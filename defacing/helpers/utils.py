@@ -75,12 +75,9 @@ def resize_sitk(original_volume, outputSize=None, interpolator=sitk.sitkLinear):
     else:
         # If No outputSize is specified then resample to 1mm spacing
         outputSize = [0.0, 0.0, 0.0]
-        outputSize[0] = int(
-            inputSize[0] * inputSpacing[0] / outputSpacing[0] + .5)
-        outputSize[1] = int(
-            inputSize[1] * inputSpacing[1] / outputSpacing[1] + .5)
-        outputSize[2] = int(
-            inputSize[2] * inputSpacing[2] / outputSpacing[2] + .5)
+        outputSize[0] = int(inputSize[0] * inputSpacing[0] / outputSpacing[0] + 0.5)
+        outputSize[1] = int(inputSize[1] * inputSpacing[1] / outputSpacing[1] + 0.5)
+        outputSize[2] = int(inputSize[2] * inputSpacing[2] / outputSpacing[2] + 0.5)
 
     resampler = sitk.ResampleImageFilter()
     resampler.SetSize(outputSize)
@@ -101,9 +98,9 @@ def grid_to_single(image_batch, label_image=False):
     x = shape[1]
     y = shape[2]
     if not label_image:
-        img_array = np.zeros((x*n, y*n, 3))
+        img_array = np.zeros((x * n, y * n, 3))
     else:
-        img_array = np.zeros((x*n, y*n))
+        img_array = np.zeros((x * n, y * n))
 
     # print (img_array.shape)
     idx = 0
@@ -112,11 +109,13 @@ def grid_to_single(image_batch, label_image=False):
             # print (i*x, (i+1)*x, j*y, (j+1)*y, idx)
             # imshow(image_batch[idx])
             if not label_image:
-                img_array[i*x: (i+1)*x, j*y: (j+1)*y, :] = image_batch[idx]
+                img_array[i * x : (i + 1) * x, j * y : (j + 1) * y, :] = image_batch[
+                    idx
+                ]
             else:
-                img_array[i*x: (i+1)*x, j*y: (j+1)*y] = image_batch[idx]
-            idx = idx+1
-    return (img_array)
+                img_array[i * x : (i + 1) * x, j * y : (j + 1) * y] = image_batch[idx]
+            idx = idx + 1
+    return img_array
 
 
 def imshow(*args, **kwargs):
@@ -127,27 +126,27 @@ def imshow(*args, **kwargs):
         imshow(img1,img2, cmap='hot')
         imshow(img1,img2,cmap=['gray','Blues'])
      """
-    cmap = kwargs.get('cmap', 'gray')
-    title = kwargs.get('title', '')
-    axis_off = kwargs.get('axis_off', '')
+    cmap = kwargs.get("cmap", "gray")
+    title = kwargs.get("title", "")
+    axis_off = kwargs.get("axis_off", "")
     if len(args) == 0:
         raise ValueError("No images given to imshow")
     elif len(args) == 1:
         plt.title(title)
-        plt.imshow(args[0], interpolation='none')
+        plt.imshow(args[0], interpolation="none")
     else:
         n = len(args)
         if type(cmap) == str:
-            cmap = [cmap]*n
+            cmap = [cmap] * n
         if type(title) == str:
-            title = [title]*n
-        plt.figure(figsize=(n*5, 10))
+            title = [title] * n
+        plt.figure(figsize=(n * 5, 10))
         for i in range(n):
-            plt.subplot(1, n, i+1)
+            plt.subplot(1, n, i + 1)
             plt.title(title[i])
             plt.imshow(args[i], cmap[i])
             if axis_off:
-                plt.axis('off')
+                plt.axis("off")
     plt.show()
 
 
@@ -158,17 +157,17 @@ def performance_evaluator(gt, prediction):
     gt = np.array(gt, dtype="float32")
     prediction = np.array(prediction, dtype="float32")
     correct = np.sum(prediction == gt)
-    accuracy = correct*100.0/(len(gt) + 1e-5)
+    accuracy = correct * 100.0 / (len(gt) + 1e-5)
 
     cm = confusion_matrix(gt, prediction)
 
-    tp = sum((prediction == 1)*(gt == 1))
-    tn = sum((prediction == 0)*(gt == 0))
-    fp = sum((prediction == 1)*(gt == 0))
-    fn = sum((prediction == 0)*(gt == 1))
+    tp = sum((prediction == 1) * (gt == 1))
+    tn = sum((prediction == 0) * (gt == 0))
+    fp = sum((prediction == 1) * (gt == 0))
+    fn = sum((prediction == 0) * (gt == 1))
 
-    sensitivity = tp*1.0/(tp + fn + 1e-3)
-    specificity = tn*1.0/(tn + fp + 1e-3)
+    sensitivity = tp * 1.0 / (tp + fn + 1e-3)
+    specificity = tn * 1.0 / (tn + fp + 1e-3)
 
     print("Inference Logs =======================")
     print("confusion matrix", cm)
@@ -176,13 +175,15 @@ def performance_evaluator(gt, prediction):
     print("Sensitivity on Inference Data: {:.3f}".format(sensitivity))
     print("Specificity on Inference Data: {:.3f}".format(specificity))
 
-    json = {'true_positive': str(tp),
-            'false_positive': str(fp),
-            'true_negative': str(tn),
-            'false_negative': str(fn),
-            'specificity': str(specificity),
-            'sensitivity': str(sensitivity),
-            'accuracy': str(accuracy)}
+    json = {
+        "true_positive": str(tp),
+        "false_positive": str(fp),
+        "true_negative": str(tn),
+        "false_negative": str(fn),
+        "specificity": str(specificity),
+        "sensitivity": str(sensitivity),
+        "accuracy": str(accuracy),
+    }
     return json
 
 
@@ -191,7 +192,7 @@ def get_available_gpus():
     Get the total number of GPUs available
     """
     local_device_protos = device_lib.list_local_devices()
-    return [x.name for x in local_device_protos if x.device_type == 'GPU']
+    return [x.name for x in local_device_protos if x.device_type == "GPU"]
 
 
 def schedule_steps(epoch, steps):

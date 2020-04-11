@@ -19,6 +19,7 @@ import GPUtil
 from threading import Thread
 import time
 
+
 def class_0_acc(y_true, y_pred):
     """
         class 0 acc
@@ -26,9 +27,9 @@ def class_0_acc(y_true, y_pred):
     y_pred = K.flatten(K.round(y_pred[..., 0]))
     y_true = K.flatten(K.round(y_true[..., 0]))
 
-    nr = K.sum(y_pred*y_true)
+    nr = K.sum(y_pred * y_true)
     dr = K.sum(y_true)
-    return nr/(dr + 1e-5)
+    return nr / (dr + 1e-5)
 
 
 def class_1_acc(y_true, y_pred):
@@ -38,9 +39,9 @@ def class_1_acc(y_true, y_pred):
     y_pred = K.flatten(K.round(y_pred[..., 1]))
     y_true = K.flatten(K.round(y_true[..., 1]))
 
-    nr = K.sum(y_pred*y_true)
+    nr = K.sum(y_pred * y_true)
     dr = K.sum(y_true)
-    return nr/(dr + 1e-5)
+    return nr / (dr + 1e-5)
 
 
 def roc_auc_score(y_true, y_pred):
@@ -64,7 +65,7 @@ def roc_auc_score(y_true, y_pred):
 
         # original paper suggests performance is robust to exact parameter choice
         gamma = 0.2
-        p     = 3
+        p = 3
 
         difference = tf.zeros_like(pos * neg) + pos - neg - gamma
 
@@ -75,7 +76,7 @@ def roc_auc_score(y_true, y_pred):
 
 # Defining customized metrics
 def sensitivity(y_true, y_pred):
-    '''Sensitivity = True Positives / (True Positives + False Negatives)'''
+    """Sensitivity = True Positives / (True Positives + False Negatives)"""
 
     true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
     all_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
@@ -83,8 +84,8 @@ def sensitivity(y_true, y_pred):
 
 
 def specificity(y_true, y_pred):
-    '''Specificity = True Negatives / (True Negatives + False Positives)'''
+    """Specificity = True Negatives / (True Negatives + False Positives)"""
 
-    true_negatives = K.sum(K.round(K.clip((1-y_true) * (1-y_pred), 0, 1)))
-    all_negatives = K.sum(K.round(K.clip(1-y_true, 0, 1)))
+    true_negatives = K.sum(K.round(K.clip((1 - y_true) * (1 - y_pred), 0, 1)))
+    all_negatives = K.sum(K.round(K.clip(1 - y_true, 0, 1)))
     return true_negatives / (all_negatives + K.epsilon())

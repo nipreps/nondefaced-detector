@@ -30,11 +30,13 @@ def conform_data(in_file, out_file=None, out_size=(256, 256, 256), order=3):
 
     # Calculate the new indexes, sampling at 1mm^3 with out_size sizes.
     # center_ijk = 0.5 * (np.array(in_file.shape) - 1)
-    new_ijk = normed[:, np.newaxis] * np.array(np.meshgrid(
-        np.arange(out_size[0]),
-        np.arange(out_size[1]),
-        np.arange(out_size[2]),
-        indexing="ij")
+    new_ijk = normed[:, np.newaxis] * np.array(
+        np.meshgrid(
+            np.arange(out_size[0]),
+            np.arange(out_size[1]),
+            np.arange(out_size[2]),
+            indexing="ij",
+        )
     ).reshape((3, -1))
     offset = 0.5 * (np.max(new_ijk, axis=1) - np.array(in_file.shape))
     # Align the centers of the two sampling extents

@@ -18,30 +18,28 @@ class inferer(object):
              allowed ['avg', 'max_vote']
     """
 
-    def __init__(self,
-                 nMontecarlo=8,
-                 threshold=0.7,
-                 mode='avg'):
-        inference_transform_params = {'image_size': 32,
-                                      'nchannels': 1,
-                                      'nmontecarlo': nMontecarlo,
-                                      'transform': None
-                                      }
+    def __init__(self, nMontecarlo=8, threshold=0.7, mode="avg"):
+        inference_transform_params = {
+            "image_size": 32,
+            "nchannels": 1,
+            "nmontecarlo": nMontecarlo,
+            "transform": None,
+        }
         self.mode = mode
         self.threshold = threshold
 
         assert self.mode.lower() in [
-            'avg', 'max_vote'], "unknown mode, allowed mode are ['avg', 'max_vote']"
+            "avg",
+            "max_vote",
+        ], "unknown mode, allowed mode are ['avg', 'max_vote']"
 
-        self.inference_generator = DataGeneratoronFly(
-            **inference_transform_params)
-        self.model_fold1 = CombinedClassifier(input_shape=(32, 32), 
-                                               dropout=0.4, 
-                                               wts_root = None, 
-                                               trainable = True)
-        self.model_fold1.load_weights(os.path.abspath(
-            '../defacing/saved_weights/best.h5'))
-
+        self.inference_generator = DataGeneratoronFly(**inference_transform_params)
+        self.model_fold1 = CombinedClassifier(
+            input_shape=(32, 32), dropout=0.4, wts_root=None, trainable=True
+        )
+        self.model_fold1.load_weights(
+            os.path.abspath("../defacing/saved_weights/best.h5")
+        )
 
     def infer(self, vol):
         """
@@ -50,25 +48,34 @@ class inferer(object):
         X1, X2, X3 = self.inference_generator.get_data(vol)
         predictions = self.model_fold1.predict(X1)
 
-        if self.mode.lower() == 'max_vote':
+        if self.mode.lower() == "max_vote":
             predictions = np.round(predictions)
             unique_elements = np.unique(predictions)
-            count_array = np.array([sum(predictions == unique_element)
-                                    for unique_element in unique_elements])
-            pred = np.argmax(count_array) if len(
-                count_array) > 1 else unique_elements[0]
-            conf = 1 if len(
-                count_array) == 1 else count_array[pred]*1.0/np.sum(count_array)
-        elif self.mode.lower() == 'avg':
+            count_array = np.array(
+                [
+                    sum(predictions == unique_element)
+                    for unique_element in unique_elements
+                ]
+            )
+            pred = (
+                np.argmax(count_array) if len(count_array) > 1 else unique_elements[0]
+            )
+            conf = (
+                1
+                if len(count_array) == 1
+                else count_array[pred] * 1.0 / np.sum(count_array)
+            )
+        elif self.mode.lower() == "avg":
             conf = np.mean(predictions)
             pred = np.round(conf)
 
-        pred_str = 'faced' if pred == 1 else 'defaced'
+        pred_str = "faced" if pred == 1 else "defaced"
         conf = conf if pred == 1 else 1.0 - conf
 
         if conf < self.threshold:
             print(
-                f"Confidence: {conf} < threshold: {self.threshold} Re-evaluating on the entire volume")
+                f"Confidence: {conf} < threshold: {self.threshold} Re-evaluating on the entire volume"
+            )
 
             _X = self.inference_generator.get_data(vol, all=True)
 
@@ -76,15 +83,15 @@ class inferer(object):
             predictions_all_f2 = self.model_fold2.predict(_X)
             predictions_all_f3 = self.model_fold3.predict(_X)
 
-            predictions_all = np.squeeze(np.concatenate([predictions_all_f1,
-                                                         predictions_all_f2,
-                                                         predictions_all_f3],
-                                                        axis=0))
+            predictions_all = np.squeeze(
+                np.concatenate(
+                    [predictions_all_f1, predictions_all_f2, predictions_all_f3], axis=0
+                )
+            )
             conf = np.mean(predictions_all)
             pred = np.round(conf)
-            pred_str = 'faced' if pred == 1 else 'defaced'
+            pred_str = "faced" if pred == 1 else "defaced"
             conf = conf if pred == 1 else 1.0 - conf
 
-        print("Given volume is " + pred_str +
-                  " with confidence of: {}".format(conf))
+        print("Given volume is " + pred_str + " with confidence of: {}".format(conf))
         return pred, conf
