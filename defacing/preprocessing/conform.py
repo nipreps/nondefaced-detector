@@ -65,4 +65,4 @@ def conform_data(in_file, out_file=None, out_size=(256, 256, 256), order=3):
 
     nii.to_filename(out_file)
     """
-    return out_file, resampled
+    return resampled
