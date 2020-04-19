@@ -12,6 +12,9 @@ __pycache__/
 # Temp files 
 *.swp
 
+# Large files
+*tfrecord*
+
 # Distribution / packaging
 .Python
 build/

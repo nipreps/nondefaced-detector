@@ -142,16 +142,16 @@ def CombinedClassifier(
         coronal_model = Submodel(
             input_shape,
             dropout,
-            name="axial",
-            weights="axial",
+            name="coronal",
+            weights="coronal",
             include_top=True,
             root_path=wts_root,
         )
         sagittal_model = Submodel(
             input_shape,
             dropout,
-            name="axial",
-            weights="axial",
+            name="sagittal",
+            weights="sagittal",
             include_top=True,
             root_path=wts_root,
         )
