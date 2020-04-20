@@ -7,7 +7,7 @@ import glob
 import numpy as np
 
 AUTOTUNE = tf.data.experimental.AUTOTUNE
-
+ROOTDIR = '/work/06850/sbansal6/maverick2/mriqc-shared'
 
 # function to apply augmentations to tf dataset
 def apply_augmentations(features, labels):

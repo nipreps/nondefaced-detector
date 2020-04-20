@@ -17,10 +17,11 @@ from tensorflow.keras.callbacks import (
     LearningRateScheduler,
     TensorBoard,
 )
+import nobrainer
 from tensorflow.keras import metrics
 from tensorflow.keras import losses
 
-
+ROOTDIR = '/work/06850/sbansal6/maverick2/mriqc-shared/'
 def train(
     volume_shape=(64, 64, 64),
     image_size=(64, 64),
@@ -30,8 +31,8 @@ def train(
     n_epochs=30,
 ):
 
-    tpaths = glob.glob("tfrecords/tfrecords_fold_1/data-train_*")
-    vpaths = glob.glob("tfrecords/tfrecords_fold_1/data-valid_*")
+    tpaths = glob.glob(ROOTDIR+"tfrecords/tfrecords_fold_1/data-train_*")
+    vpaths = glob.glob(ROOTDIR+"tfrecords/tfrecords_fold_1/data-valid_*")
 
     planes = ["axial", "coronal", "sagittal"]
 
@@ -103,7 +104,7 @@ def train(
         print("GLOBAL BATCH SIZE: ", global_batch_size)
 
         dataset_train = get_dataset(
-            "tfrecords/tfrecords_fold_1/data-train_*",
+            ROOTDIR + "tfrecords/tfrecords_fold_1/data-train_*",
             n_classes=n_classes,
             batch_size=global_batch_size,
             volume_shape=volume_shape,
@@ -112,7 +113,7 @@ def train(
         )
 
         dataset_valid = get_dataset(
-            "tfrecords/tfrecords_fold_1/data-valid_*",
+            ROOTDIR + "tfrecords/tfrecords_fold_1/data-valid_*",
             n_classes=n_classes,
             batch_size=global_batch_size,
             volume_shape=volume_shape,
@@ -120,21 +121,21 @@ def train(
             shuffle_buffer_size=global_batch_size,
         )
 
-        ### MIGHT NEED TO REWRITE THIS AS THE VOLUME SHAPE IS CHANGED
-        ### AND THERE ARE NO BLOCKS (FOR NOW)
-        #         steps_per_epoch = nobrainer.dataset.get_steps_per_epoch(
-        #             n_volumes=len(tpaths),
-        #             volume_shape=volume_shape,
-        #             block_shape=block_shape,
-        #             batch_size=global_batch_size,
-        #         )
+        steps_per_epoch = nobrainer.dataset.get_steps_per_epoch(
+             n_volumes=len(tpaths),
+             volume_shape=volume_shape,
+             block_shape=volume_shape,
+             batch_size=global_batch_size,
+         )
 
-        #         validation_steps = nobrainer.dataset.get_steps_per_epoch(
-        #             n_volumes=len(vpaths),
-        #             volume_shape=volume_shape,
-        #             block_shape=block_shape,
-        #             batch_size=global_batch_size,
-        #         )
+        validation_steps = nobrainer.dataset.get_steps_per_epoch(
+             n_volumes=len(vpaths),
+             volume_shape=volume_shape,
+             block_shape=volume_shape,
+             batch_size=global_batch_size,
+         )
+
+        print(steps_per_epoch, validation_steps)
 
         model.fit(
             dataset_train,
