@@ -198,7 +198,15 @@ def get_available_gpus():
 def schedule_steps(epoch, steps):
     for step in steps:
         if step[1] > epoch:
+
             print("Setting learning rate to {}".format(step[0]))
             return step[0]
     print("Setting learning rate to {}".format(steps[-1][0]))
     return steps[-1][0]
+
+
+
+if __name__ == '__main__':
+	vol, aff, _ = load_vol ('/home/pi/mri-face-detector/sample_vols/faced/example4.nii.gz')
+	vol = resize_sitk(vol, outputSize=(64, 64, 64))
+	save_vol('/home/pi/mri-face-detector/sample_vols/faced/example4_conf.nii.gz', vol, aff)
