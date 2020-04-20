@@ -4,6 +4,7 @@ from tempfile import mkdtemp
 import numpy as np
 import nibabel as nb
 from scipy.ndimage import map_coordinates
+from skimage.transform import resize
 
 
 def conform_data(in_file, out_file=None, out_size=(256, 256, 256), order=3):
@@ -24,9 +25,14 @@ def conform_data(in_file, out_file=None, out_size=(256, 256, 256), order=3):
     # Reorient to closest canonical
     in_file = nb.as_closest_canonical(in_file)
     data = np.asanyarray(in_file.dataobj)
+    in_shape = in_file.shape
 
     # Calculate the factors to normalize voxel size to 1mm isotropic
     normed = 1.0 / np.array(in_file.header.get_zooms()[:3])
+
+    normed[0] = normed[0]*in_shape[0]*1.0/out_size[0]
+    normed[1] = normed[1]*in_shape[1]*1.0/out_size[1]
+    normed[2] = normed[2]*in_shape[2]*1.0/out_size[2]
 
     # Calculate the new indexes, sampling at 1mm^3 with out_size sizes.
     # center_ijk = 0.5 * (np.array(in_file.shape) - 1)
@@ -38,10 +44,11 @@ def conform_data(in_file, out_file=None, out_size=(256, 256, 256), order=3):
             indexing="ij",
         )
     ).reshape((3, -1))
+    
     offset = 0.5 * (np.max(new_ijk, axis=1) - np.array(in_file.shape))
     # Align the centers of the two sampling extents
     new_ijk -= offset[:, np.newaxis]
-
+    print (np.prod(new_ijk.shape), np.prod(data.shape))
     # Resample data in the new grid
     resampled = map_coordinates(
         data,
@@ -53,6 +60,8 @@ def conform_data(in_file, out_file=None, out_size=(256, 256, 256), order=3):
         prefilter=True,
     ).reshape(out_size)
     resampled[resampled < 0] = 0
+
+    # resampled = resize(data, out_size)
 
     """
     # Create a new x-form affine, aligned with cardinal axes, 1mm3 and centered.
