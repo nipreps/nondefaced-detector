@@ -189,7 +189,7 @@ def get_dataset(
     if batch_size is not None:
         ds = ds.batch(batch_size=batch_size, drop_remainder=True)
         ds = ds.map(lambda x,y: (tf.reshape(x, ((batch_size*n, 3, ) if plane == "combined" else (batch_size*n,)) + volume_shape[:2] +(1,)), 
-                                                      tf.reshape(y, (batch_size*n,))))
+                                tf.reshape(y, (batch_size*n,))))
 
     if shuffle_buffer_size:
         ds = ds.shuffle(buffer_size=shuffle_buffer_size)
@@ -245,12 +245,13 @@ def structural_slice(x, y, plane, n=4):
         raise ValueError("expected plane to be one of ['axial', 'coronal', 'sagittal']")
 
 
+
 if __name__ == "__main__":
 
     n_classes = 2
     global_batch_size = 8
     volume_shape = (64, 64, 64)
-    dataset_train_axial = get_dataset(
+    ds = get_dataset(
         ROOTDIR + "tfrecords/tfrecords_fold_1/data-train_*",
         n_classes=n_classes,
         batch_size=global_batch_size,
@@ -259,7 +260,20 @@ if __name__ == "__main__":
         shuffle_buffer_size=3,
     )
 
-    print(dataset_train_axial)
+    print(ds)
+    x,y=next(ds.as_numpy_iterator)
+    import matplotlib 
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+
+    rows = 5
+    count = 1
+    idx = np.random.randint(0, 64, rows)
+    for i in range(rows):
+        for j in range(3):
+            plt.subplot(rows, 3, count)
+            plt.imshow(x[idx[i], j, :, :, 0])
+    plt.savefig("processed_image.png")
     
 # dataset_train_coronal = get_dataset("tfrecords/tfrecords_fold_1/data-train_*",
 #                             n_classes=n_classes,
