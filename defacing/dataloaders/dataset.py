@@ -224,7 +224,7 @@ def structural_slice(x, y, plane, n=4):
 
         if plane == "coronal":
             idx = np.random.randint(0, shape[1], n)
-            x = tf.transpose(x, perm=[1, 0, 2])
+            x = tf.transpose(x, perm=[1, 2, 0])
 
         if plane == "sagittal":
             idx = np.random.randint(0, shape[2], n)
