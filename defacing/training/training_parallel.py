@@ -35,7 +35,7 @@ def train(
     tpaths = glob.glob(ROOTDIR+"tfrecords/tfrecords_fold_1/data-train_*")
     vpaths = glob.glob(ROOTDIR+"tfrecords/tfrecords_fold_1/data-valid_*")
 
-    planes = ["axial", "coronal", "sagittal"]
+    planes = ["axial", "coronal", "sagittal", "combined"]
 
     strategy = tf.distribute.MirroredStrategy()
     BATCH_SIZE_PER_REPLICA = batch_size
@@ -74,14 +74,24 @@ def train(
 
         with strategy.scope():
 
-            lr = 1e-4
-            model = modelN.Submodel(
-                input_shape=image_size,
-                dropout=dropout,
-                name=plane,
-                include_top=True,
-                weights=None,
-            )
+            if not plane == "combined": 
+                lr = 1e-4
+                model = modelN.Submodel(
+                    input_shape=image_size,
+                    dropout=dropout,
+                    name=plane,
+                    include_top=True,
+                    weights=None,
+                )
+            else:
+                lr = 5e-5
+                model = modelN.CombinedClassifier(
+                    input_shape=image_size, 
+                    dropout=dropout, 
+                    wts_root=cp_save_path
+                )
+
+
 
             print("Submodel: ", plane)
             print(model.summary())
@@ -151,10 +161,7 @@ def train(
         del model
         K.clear_session()
 
-    lr = 5e-5
-    model = modelN.CombinedClassifier(
-        input_shape=image_size, dropout=dropout, wts_root=cp_save_path
-    )
+    
 
 
 if __name__ == "__main__":
