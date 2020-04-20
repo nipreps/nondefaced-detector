@@ -22,6 +22,7 @@ from tensorflow.keras import metrics
 from tensorflow.keras import losses
 
 ROOTDIR = '/work/06850/sbansal6/maverick2/mriqc-shared/'
+
 def train(
     volume_shape=(64, 64, 64),
     image_size=(64, 64),
@@ -50,6 +51,7 @@ def train(
     logdir_path = os.path.join(model_save_path, "tb_logs")
     if not os.path.exists(logdir_path):
         os.makedirs(logdir_path)
+
 
     for plane in planes:
 
