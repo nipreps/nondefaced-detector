@@ -118,6 +118,7 @@ def get_dataset(
     batch_size,
     volume_shape,
     plane,
+    n = 4,
     block_shape=None,
     n_epochs=None,
     mapping=None,
@@ -165,7 +166,7 @@ def get_dataset(
         )
 
     def _ss(x, y):
-        x, y = structural_slice(x, y, plane)
+        x, y = structural_slice(x, y, plane, n)
         return (x, y)
 
     ds = ds.map(_ss, num_parallel_calls)
@@ -178,15 +179,17 @@ def get_dataset(
     #     ds = ds.map(_f, num_parallel_calls=num_parallel_calls)
 
     # This step is necessary because it reduces the extra dimension.
-    ds = ds.unbatch()
+    # ds = ds.unbatch()
 
     # add a single dimension at the end
-    ds = ds.map(lambda x, y: (tf.expand_dims(x, -1), y))
+    # ds = ds.map(lambda x, y: (tf.expand_dims(x, -1), y))
 
     ds = ds.prefetch(buffer_size=batch_size)
 
     if batch_size is not None:
         ds = ds.batch(batch_size=batch_size, drop_remainder=True)
+        ds = ds.map(lambda x,y: (tf.reshape(x, ((batch_size*n, 3, ) if plane == "combined" else (batch_size*n,)) + volume_shape[:2] +(1,)), 
+                                                      tf.reshape(y, (batch_size*n,))))
 
     if shuffle_buffer_size:
         ds = ds.shuffle(buffer_size=shuffle_buffer_size)
@@ -230,10 +233,10 @@ def structural_slice(x, y, plane, n=4):
         if plane == "combined":
             temp = []
             for op in options[:-1]:
-                temp.append(tf.unsqueeze(structural_slice(x, y, op)[0], axis=0))
-            x = tf.concat(temp, axis = 0)
+                temp.append(tf.expand_dims(structural_slice(x, y, op, n)[0], axis=1))
+            x = tf.concat(temp, axis = 1)
 
-        x = tf.squeeze(tf.gather_nd(x, idx.reshape(n, 1, 1)), axis=1)
+        if not plane == "combined": x = tf.squeeze(tf.gather_nd(x, idx.reshape(n, 1, 1)), axis=1)
         x = tf.convert_to_tensor(x)
         y = tf.repeat(y, n)
 
@@ -245,14 +248,14 @@ def structural_slice(x, y, plane, n=4):
 if __name__ == "__main__":
 
     n_classes = 2
-    global_batch_size = 4
+    global_batch_size = 8
     volume_shape = (64, 64, 64)
     dataset_train_axial = get_dataset(
         ROOTDIR + "tfrecords/tfrecords_fold_1/data-train_*",
         n_classes=n_classes,
         batch_size=global_batch_size,
         volume_shape=volume_shape,
-        plane="axial",
+        plane="combined",
         shuffle_buffer_size=3,
     )
 
