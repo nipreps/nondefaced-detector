@@ -112,6 +112,59 @@ def parse_example_fn(volume_shape, scalar_label=False):
     return parse_example
 
 
+def standardize(x, clip_value_min=-5000, clip_value_max=5000):
+    """Standard score input tensor.
+    Implements `(x - mean(x)) / stdev(x)`.
+    Parameters
+    ----------
+    x: tensor, values to standardize.
+    Returns
+    -------
+    Tensor of standardized values. Output has mean 0 and standard deviation 1.
+    """
+    x = tf.where(tf.math.is_nan(x), tf.zeros_like(x), x)
+    x = tf.where(tf.math.is_inf(x), tf.zeros_like(x), x)
+    x = tf.convert_to_tensor(x)
+    if x.dtype != tf.float32:
+        x = tf.cast(x, tf.float32)
+    # x = tf.clip_by_value(
+    #     x, 
+    #    clip_value_min, 
+    #    clip_value_max, name=None
+    #    )
+    
+    mean, var = tf.nn.moments(x, axes=None)
+    std = tf.sqrt(var)
+    return (x - mean) / std
+
+
+def normalize(x):
+    """Standard score input tensor.
+    Implements `(x - mean(x)) / stdev(x)`.
+    Parameters
+    ----------
+    x: tensor, values to standardize.
+    Returns
+    -------
+    Tensor of standardized values. Output has mean 0 and standard deviation 1.
+    """
+    x = tf.convert_to_tensor(x)
+    if x.dtype != tf.float32:
+        x = tf.cast(x, tf.float32)
+
+    max_value = tf.math.reduce_max(
+                x, 
+                axis=None, 
+                keepdims=False, name=None
+                )
+
+    min_value = tf.math.reduce_min(
+                x, 
+                axis=None, 
+                keepdims=False, name=None
+                )
+    return (x - min_value) / (max_value - min_value + 1e-3)
+
 def get_dataset(
     file_pattern,
     n_classes,
@@ -216,18 +269,19 @@ def structural_slice(x, y, plane, n=4):
 
     options = ["axial", "coronal", "sagittal", "combined"]
     shape = np.array(x.shape)
+    x = normalize(standardize(x))
 
     if isinstance(plane, str) and plane in options:
         if plane == "axial":
-            idx = np.random.randint(0, shape[0], n)
+            idx = np.random.randint(shape[0]//5, 3*shape[0]//5, n)
             x = x
 
         if plane == "coronal":
-            idx = np.random.randint(0, shape[1], n)
+            idx = np.random.randint(shape[1]//4, 3*shape[1]//4, n)
             x = tf.transpose(x, perm=[1, 2, 0])
 
         if plane == "sagittal":
-            idx = np.random.randint(0, shape[2], n)
+            idx = np.random.randint(shape[2]//3, 2*shape[2]//3, n)
             x = tf.transpose(x, perm=[2, 0, 1])
 
         if plane == "combined":
@@ -239,7 +293,7 @@ def structural_slice(x, y, plane, n=4):
         if not plane == "combined": x = tf.squeeze(tf.gather_nd(x, idx.reshape(n, 1, 1)), axis=1)
         x = tf.convert_to_tensor(x)
         y = tf.repeat(y, n)
-
+        
         return x, y
     else:
         raise ValueError("expected plane to be one of ['axial', 'coronal', 'sagittal']")
@@ -261,20 +315,28 @@ if __name__ == "__main__":
     )
 
     print(ds)
-    x,y=next(ds.as_numpy_iterator)
+    for _ in range(100):
+        x,y=next(ds.as_numpy_iterator())
+        print (np.min(x), np.max(x), np.unique(y))
+        if np.max(x) == np.nan:
+            print(x)
+    """
+    print (y)
     import matplotlib 
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
 
     rows = 5
     count = 1
-    idx = np.random.randint(0, 64, rows)
+    idx = np.random.randint(0, 32, rows)
     for i in range(rows):
         for j in range(3):
             plt.subplot(rows, 3, count)
             plt.imshow(x[idx[i], j, :, :, 0])
+            plt.title(str(y[idx[i]]))
+            count += 1
     plt.savefig("processed_image.png")
-    
+    """
 # dataset_train_coronal = get_dataset("tfrecords/tfrecords_fold_1/data-train_*",
 #                             n_classes=n_classes,
 #                             batch_size=global_batch_size,

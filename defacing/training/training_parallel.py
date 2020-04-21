@@ -102,9 +102,9 @@ def train(
                 metrics.TrueNegatives(name="tn"),
                 metrics.FalseNegatives(name="fn"),
                 metrics.BinaryAccuracy(name="accuracy"),
-                metrics.Precision(name="precision"),
-                metrics.Recall(name="recall"),
-                metrics.AUC(name="auc"),
+                # metrics.Precision(name="precision"),
+                # metrics.Recall(name="recall"),
+                # metrics.AUC(name="auc"),
             ]
 
             model.compile(
