@@ -6,14 +6,8 @@ import nibabel as nb
 from scipy.ndimage import map_coordinates
 
 
-def conform_data(in_file, out_file=None, out_size=(256, 256, 256), order=3):
-    r"""
-    Conform the input dataset to the canonical orientation.
-
-    The output dataset will also have a fixed size matrix and :math:`\text{1mm}^\text{3}`
-    isotropic resolution.
-
-    """
+def conform_data(in_file, out_file=None, out_size=(256, 256, 256), out_zooms=(1.0, 1.0, 1.0), order=3):
+    """Conform the input dataset to the canonical orientation."""
     if isinstance(in_file, (str, Path)):
         in_file = nb.load(in_file)
 
@@ -25,8 +19,8 @@ def conform_data(in_file, out_file=None, out_size=(256, 256, 256), order=3):
     in_file = nb.as_closest_canonical(in_file)
     data = np.asanyarray(in_file.dataobj)
 
-    # Calculate the factors to normalize voxel size to 1mm isotropic
-    normed = 1.0 / np.array(in_file.header.get_zooms()[:3])
+    # Calculate the factors to normalize voxel size to out_zooms
+    normed = np.array(out_zooms) / np.array(in_file.header.get_zooms()[:3])
 
     # Calculate the new indexes, sampling at 1mm^3 with out_size sizes.
     # center_ijk = 0.5 * (np.array(in_file.shape) - 1)
