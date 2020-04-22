@@ -32,8 +32,8 @@ def train(
     n_epochs=30,
 ):
 
-    tpaths = glob.glob(ROOTDIR+"tfrecords/tfrecords_fold_1/data-train_*")
-    vpaths = glob.glob(ROOTDIR+"tfrecords/tfrecords_fold_1/data-valid_*")
+    tpaths = glob.glob(ROOTDIR+"tfrecords_no_ds001985/tfrecords_fold_2/data-train_*")
+    vpaths = glob.glob(ROOTDIR+"tfrecords_no_ds001985/tfrecords_fold_2/data-valid_*")
 
     planes = ["axial", "coronal", "sagittal", "combined"]
 
@@ -102,9 +102,9 @@ def train(
                 metrics.TrueNegatives(name="tn"),
                 metrics.FalseNegatives(name="fn"),
                 metrics.BinaryAccuracy(name="accuracy"),
-                # metrics.Precision(name="precision"),
-                # metrics.Recall(name="recall"),
-                # metrics.AUC(name="auc"),
+                #metrics.Precision(name="precision"),
+                #metrics.Recall(name="recall"),
+                #metrics.AUC(name="auc"),
             ]
 
             model.compile(
@@ -116,7 +116,7 @@ def train(
         print("GLOBAL BATCH SIZE: ", global_batch_size)
 
         dataset_train = get_dataset(
-            ROOTDIR + "tfrecords/tfrecords_fold_1/data-train_*",
+            ROOTDIR + "tfrecords_no_ds001985/tfrecords_fold_2/data-train_*",
             n_classes=n_classes,
             batch_size=global_batch_size,
             volume_shape=volume_shape,
@@ -125,7 +125,7 @@ def train(
         )
 
         dataset_valid = get_dataset(
-            ROOTDIR + "tfrecords/tfrecords_fold_1/data-valid_*",
+            ROOTDIR + "tfrecords_no_ds001985/tfrecords_fold_2/data-valid_*",
             n_classes=n_classes,
             batch_size=global_batch_size,
             volume_shape=volume_shape,

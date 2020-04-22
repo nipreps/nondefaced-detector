@@ -270,14 +270,22 @@ def structural_slice(x, y, plane, n=4):
     options = ["axial", "coronal", "sagittal", "combined"]
     shape = np.array(x.shape)
     x = normalize(standardize(x))
-
+    print(tf.math.reduce_max(
+                x,
+                axis=None,
+                keepdims=False, name=None
+                ), tf.math.reduce_min(
+                x,
+                axis=None,
+                keepdims=False, name=None
+                ))
     if isinstance(plane, str) and plane in options:
         if plane == "axial":
-            idx = np.random.randint(shape[0]//5, 3*shape[0]//5, n)
+            idx = np.random.randint(2*shape[0]//5, 3*shape[0]//5, n)
             x = x
 
         if plane == "coronal":
-            idx = np.random.randint(shape[1]//4, 3*shape[1]//4, n)
+            idx = np.random.randint(2*shape[1]//4, 3*shape[1]//4, n)
             x = tf.transpose(x, perm=[1, 2, 0])
 
         if plane == "sagittal":
@@ -306,7 +314,7 @@ if __name__ == "__main__":
     global_batch_size = 8
     volume_shape = (64, 64, 64)
     ds = get_dataset(
-        ROOTDIR + "tfrecords/tfrecords_fold_1/data-train_*",
+        ROOTDIR + "tfrecords_no_ds001985/tfrecords_fold_1/data-train_*",
         n_classes=n_classes,
         batch_size=global_batch_size,
         volume_shape=volume_shape,

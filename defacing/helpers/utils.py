@@ -9,7 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from tensorflow.keras import backend as K
 import tensorflow as tf
-from sklearn.metrics import confusion_matrix
+# from sklearn.metrics import confusion_matrix
 from tensorflow.python.client import device_lib
 
 
