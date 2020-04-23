@@ -4,17 +4,10 @@ from tempfile import mkdtemp
 import numpy as np
 import nibabel as nb
 from scipy.ndimage import map_coordinates
-from skimage.transform import resize
 
 
-def conform_data(in_file, out_file=None, out_size=(256, 256, 256), order=3):
-    r"""
-    Conform the input dataset to the canonical orientation.
-
-    The output dataset will also have a fixed size matrix and :math:`\text{1mm}^\text{3}`
-    isotropic resolution.
-
-    """
+def conform_data(in_file, out_file=None, out_size=(256, 256, 256), out_zooms=(1.0, 1.0, 1.0), order=3):
+    """Conform the input dataset to the canonical orientation."""
     if isinstance(in_file, (str, Path)):
         in_file = nb.load(in_file)
 
@@ -25,30 +18,22 @@ def conform_data(in_file, out_file=None, out_size=(256, 256, 256), order=3):
     # Reorient to closest canonical
     in_file = nb.as_closest_canonical(in_file)
     data = np.asanyarray(in_file.dataobj)
-    in_shape = in_file.shape
 
-    # Calculate the factors to normalize voxel size to 1mm isotropic
-    normed = 1.0 / np.array(in_file.header.get_zooms()[:3])
-
-    normed[0] = normed[0]*in_shape[0]*1.0/out_size[0]
-    normed[1] = normed[1]*in_shape[1]*1.0/out_size[1]
-    normed[2] = normed[2]*in_shape[2]*1.0/out_size[2]
+    # Calculate the factors to normalize voxel size to out_zooms
+    normed = np.array(out_zooms) / np.array(in_file.header.get_zooms()[:3])
 
     # Calculate the new indexes, sampling at 1mm^3 with out_size sizes.
     # center_ijk = 0.5 * (np.array(in_file.shape) - 1)
-    new_ijk = normed[:, np.newaxis] * np.array(
-        np.meshgrid(
-            np.arange(out_size[0]),
-            np.arange(out_size[1]),
-            np.arange(out_size[2]),
-            indexing="ij",
-        )
+    new_ijk = normed[:, np.newaxis] * np.array(np.meshgrid(
+        np.arange(out_size[0]),
+        np.arange(out_size[1]),
+        np.arange(out_size[2]),
+        indexing="ij")
     ).reshape((3, -1))
-    
     offset = 0.5 * (np.max(new_ijk, axis=1) - np.array(in_file.shape))
     # Align the centers of the two sampling extents
     new_ijk -= offset[:, np.newaxis]
-    print (np.prod(new_ijk.shape), np.prod(data.shape))
+
     # Resample data in the new grid
     resampled = map_coordinates(
         data,
@@ -61,9 +46,6 @@ def conform_data(in_file, out_file=None, out_size=(256, 256, 256), order=3):
     ).reshape(out_size)
     resampled[resampled < 0] = 0
 
-    # resampled = resize(data, out_size)
-
-    """
     # Create a new x-form affine, aligned with cardinal axes, 1mm3 and centered.
     newaffine = np.eye(4)
     newaffine[:3, 3] = -0.5 * (np.array(out_size) - 1)
@@ -73,5 +55,6 @@ def conform_data(in_file, out_file=None, out_size=(256, 256, 256), order=3):
     out_file = Path(out_file).absolute()
 
     nii.to_filename(out_file)
-    """
-    return resampled
+    
+    
+    # return out_file, resampled

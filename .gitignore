@@ -19,6 +19,7 @@ __pycache__/
 .Python
 build/
 node_modules/
+model_save_dir/
 develop-eggs/
 dist/
 downloads/

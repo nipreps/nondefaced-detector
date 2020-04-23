@@ -16,8 +16,8 @@ import subprocess
 orig_data_face = "/work/01329/poldrack/data/mriqc-net/data/face/T1w"
 orig_data_deface = "/work/01329/poldrack/data/mriqc-net/data/defaced"
 
-save_data_face = "/work/06850/sbansal6/maverick2/mriqc-shared/face"
-save_data_deface = "/work/06850/sbansal6/maverick2/mriqc-shared/deface"
+save_data_face = "/work/06850/sbansal6/maverick2/mriqc-shared/conformed/face"
+save_data_deface = "/work/06850/sbansal6/maverick2/mriqc-shared/conformed/deface"
 
 os.makedirs(save_data_face, exist_ok=True)
 os.makedirs(save_data_deface, exist_ok=True)
@@ -40,17 +40,17 @@ def preprocess(pth, conform_size, save_data_path):
     print("Confirmation step")
     volume = conform_data(pth, out_size=conform_size)
 
-    print("Normalize/Standardize step")
-    volume = normalize_volume(standardize_volume(volume))
-    save_path = os.path.join(save_data_path, filename)
+#     print("Normalize/Standardize step")
+#     volume = normalize_volume(standardize_volume(volume))
+#     save_path = os.path.join(save_data_path, filename)
 
-    newaffine = np.eye(4)
-    newaffine[:3, 3] = -0.5 * (np.array(conform_size) - 1)
-    nii = nb.Nifti1Image(volume, newaffine, None)
+#     newaffine = np.eye(4)
+#     newaffine[:3, 3] = -0.5 * (np.array(conform_size) - 1)
+#     nii = nb.Nifti1Image(volume, newaffine, None)
 
-    print("Save new affine")
-    nii.to_filename(save_path)
-    return save_path
+#     print("Save new affine")
+#     nii.to_filename(save_path)
+#     return save_path
 
 
 def checkNonConformed(orig_path, save_path):
@@ -133,3 +133,7 @@ for path in glob(orig_data_deface + "/*/*.nii*"):
     except:
         print("Preprocessing incomplete. Exception occurred.")
         pass
+    
+
+checkNonConformed(orig_data_face, save_data_face)
+checkNonConformed(orig_data_deface, save_data_deface)
