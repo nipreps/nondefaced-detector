@@ -248,7 +248,7 @@ def get_dataset(
         ds = ds.shuffle(buffer_size=shuffle_buffer_size)
 
     # Repeat the dataset n_epochs times
-    ds = ds.repeat(n_epochs)
+#     ds = ds.repeat(n_epochs)
 
     return ds
 
@@ -270,6 +270,7 @@ def structural_slice(x, y, plane, n=4):
     options = ["axial", "coronal", "sagittal", "combined"]
     shape = np.array(x.shape)
     x = normalize(standardize(x))
+    
     print(tf.math.reduce_max(
                 x,
                 axis=None,
