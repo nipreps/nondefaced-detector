@@ -23,10 +23,17 @@ from tensorflow.keras import losses
 
 ROOTDIR = '/work/06850/sbansal6/maverick2/mriqc-shared/'
 
+def scheduler(epoch):
+  if epoch < 3:
+    return 0.001
+  else:
+    return 0.001 * tf.math.exp(0.1 * (10 - epoch))
+
+
 def train(
     volume_shape=(64, 64, 64),
     image_size=(64, 64),
-    dropout=0.4,
+    dropout=0.2,
     batch_size=8,
     n_classes=2,
     n_epochs=30,
@@ -102,14 +109,14 @@ def train(
                 metrics.TrueNegatives(name="tn"),
                 metrics.FalseNegatives(name="fn"),
                 metrics.BinaryAccuracy(name="accuracy"),
-                #metrics.Precision(name="precision"),
-                #metrics.Recall(name="recall"),
-                #metrics.AUC(name="auc"),
+                metrics.Precision(name="precision"),
+                metrics.Recall(name="recall"),
+                metrics.AUC(name="auc"),
             ]
 
             model.compile(
                 loss=tf.keras.losses.binary_crossentropy,
-                optimizer="adam",
+                optimizer=Adam(learning_rate = lr),
                 metrics=METRICS,
             )
 
@@ -149,13 +156,14 @@ def train(
 
         print(steps_per_epoch, validation_steps)
 
+        lrcallback = tf.keras.callbacks.LearningRateScheduler(scheduler)
         model.fit(
             dataset_train,
             epochs=n_epochs,
             steps_per_epoch=steps_per_epoch,
             validation_data=dataset_valid,
             validation_steps=validation_steps,
-            callbacks=[tbCallback, model_checkpoint],
+            callbacks=[tbCallback, lrcallback, model_checkpoint],
         )
 
         del model

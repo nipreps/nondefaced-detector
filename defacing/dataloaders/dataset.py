@@ -238,17 +238,21 @@ def get_dataset(
     # ds = ds.map(lambda x, y: (tf.expand_dims(x, -1), y))
 
     ds = ds.prefetch(buffer_size=batch_size)
-
+    def reshape(x,y):
+        if plane == "combined":
+            for _ in 3:
+                pass
+        return (x, y)
     if batch_size is not None:
         ds = ds.batch(batch_size=batch_size, drop_remainder=True)
-        ds = ds.map(lambda x,y: (tf.reshape(x, ((batch_size*n, 3, ) if plane == "combined" else (batch_size*n,)) + volume_shape[:2] +(1,)), 
-                                tf.reshape(y, (batch_size*n,))))
+        # ds = ds.map(lambda x,y: (tf.reshape(x, ((3, batch_size*n,) if plane == "combined" else (batch_size*n,)) + volume_shape[:2] +(1,)), 
+        #                         tf.reshape(y, (batch_size*n,))))
 
     if shuffle_buffer_size:
         ds = ds.shuffle(buffer_size=shuffle_buffer_size)
 
     # Repeat the dataset n_epochs times
-#     ds = ds.repeat(n_epochs)
+    ds = ds.repeat(n_epochs)
 
     return ds
 
@@ -271,37 +275,29 @@ def structural_slice(x, y, plane, n=4):
     shape = np.array(x.shape)
     x = normalize(standardize(x))
     
-    print(tf.math.reduce_max(
-                x,
-                axis=None,
-                keepdims=False, name=None
-                ), tf.math.reduce_min(
-                x,
-                axis=None,
-                keepdims=False, name=None
-                ))
     if isinstance(plane, str) and plane in options:
         if plane == "axial":
-            idx = np.random.randint(2*shape[0]//5, 3*shape[0]//5, n)
+            idx = np.random.randint(2*shape[0]//5, 3*shape[0]//5)
             x = x
 
         if plane == "coronal":
-            idx = np.random.randint(2*shape[1]//4, 3*shape[1]//4, n)
+            idx = np.random.randint(2*shape[1]//4, 3*shape[1]//4)
             x = tf.transpose(x, perm=[1, 2, 0])
 
         if plane == "sagittal":
-            idx = np.random.randint(shape[2]//3, 2*shape[2]//3, n)
+            idx = np.random.randint(shape[2]//3, 2*shape[2]//3)
             x = tf.transpose(x, perm=[2, 0, 1])
 
         if plane == "combined":
-            temp = []
+            temp = {}
             for op in options[:-1]:
-                temp.append(tf.expand_dims(structural_slice(x, y, op, n)[0], axis=1))
-            x = tf.concat(temp, axis = 1)
+                temp[op] = structural_slice(x, y, op, n)[0]
+            x = temp
 
-        if not plane == "combined": x = tf.squeeze(tf.gather_nd(x, idx.reshape(n, 1, 1)), axis=1)
-        x = tf.convert_to_tensor(x)
-        y = tf.repeat(y, n)
+        if not plane == "combined": 
+            # x = tf.squeeze(tf.gather_nd(x, idx.reshape(n, 1, 1)), axis=1)
+            x = tf.convert_to_tensor(tf.expand_dims(x[idx], axis=-1))
+        # y = tf.repeat(y, n)
         
         return x, y
     else:
@@ -319,7 +315,7 @@ if __name__ == "__main__":
         n_classes=n_classes,
         batch_size=global_batch_size,
         volume_shape=volume_shape,
-        plane="combined",
+        plane="axial",
         shuffle_buffer_size=3,
     )
 
