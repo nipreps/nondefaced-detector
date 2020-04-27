@@ -1,7 +1,7 @@
 import nobrainer
 from nobrainer.io import _is_gzipped
 from nobrainer.volume import to_blocks
-
+import tensorflow_probability as tfp
 import tensorflow as tf
 import glob
 import numpy as np
@@ -112,7 +112,24 @@ def parse_example_fn(volume_shape, scalar_label=False):
     return parse_example
 
 
-def standardize(x, clip_value_min=-5000, clip_value_max=5000):
+def clip(x, q =90):
+    """
+    """
+    min_val = 0
+    max_val = tfp.stats.percentile(
+                x, q, axis=None, 
+                preserve_gradients=False, 
+                name=None
+                )
+    x = tf.clip_by_value(
+        x, 
+        min_val, 
+        max_val, 
+        name=None
+        )
+    return x
+
+def standardize(x):
     """Standard score input tensor.
     Implements `(x - mean(x)) / stdev(x)`.
     Parameters
@@ -122,20 +139,17 @@ def standardize(x, clip_value_min=-5000, clip_value_max=5000):
     -------
     Tensor of standardized values. Output has mean 0 and standard deviation 1.
     """
-    x = tf.where(tf.math.is_nan(x), tf.zeros_like(x), x)
-    x = tf.where(tf.math.is_inf(x), tf.zeros_like(x), x)
     x = tf.convert_to_tensor(x)
     if x.dtype != tf.float32:
         x = tf.cast(x, tf.float32)
-    # x = tf.clip_by_value(
-    #     x, 
-    #    clip_value_min, 
-    #    clip_value_max, name=None
-    #    )
-    
+    median = tfp.stats.percentile(
+                x, 50, axis=None, 
+                preserve_gradients=False, 
+                name=None
+                )
     mean, var = tf.nn.moments(x, axes=None)
     std = tf.sqrt(var)
-    return (x - mean) / std
+    return (x - median) / std
 
 
 def normalize(x):
@@ -273,20 +287,25 @@ def structural_slice(x, y, plane, n=4):
 
     options = ["axial", "coronal", "sagittal", "combined"]
     shape = np.array(x.shape)
-    x = normalize(standardize(x))
-    
+    x = clip(x)
+    x = normalize(x)
+    x = standardize(x)
+
     if isinstance(plane, str) and plane in options:
         if plane == "axial":
             idx = np.random.randint(2*shape[0]//5, 3*shape[0]//5)
             x = x
+            k = 3
 
         if plane == "coronal":
             idx = np.random.randint(2*shape[1]//4, 3*shape[1]//4)
             x = tf.transpose(x, perm=[1, 2, 0])
+            k = 2
 
         if plane == "sagittal":
             idx = np.random.randint(shape[2]//3, 2*shape[2]//3)
             x = tf.transpose(x, perm=[2, 0, 1])
+            k = 1
 
         if plane == "combined":
             temp = {}
@@ -296,6 +315,9 @@ def structural_slice(x, y, plane, n=4):
 
         if not plane == "combined": 
             # x = tf.squeeze(tf.gather_nd(x, idx.reshape(n, 1, 1)), axis=1)
+            # x =  tf.image.rot90(
+            #        x, k, name=None
+            #     )
             x = tf.convert_to_tensor(tf.expand_dims(x[idx], axis=-1))
         # y = tf.repeat(y, n)
         
@@ -315,33 +337,30 @@ if __name__ == "__main__":
         n_classes=n_classes,
         batch_size=global_batch_size,
         volume_shape=volume_shape,
-        plane="axial",
+        plane="combined",
         shuffle_buffer_size=3,
     )
 
-    print(ds)
-    for _ in range(100):
-        x,y=next(ds.as_numpy_iterator())
-        print (np.min(x), np.max(x), np.unique(y))
-        if np.max(x) == np.nan:
-            print(x)
-    """
-    print (y)
     import matplotlib 
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
 
-    rows = 5
-    count = 1
-    idx = np.random.randint(0, 32, rows)
-    for i in range(rows):
-        for j in range(3):
-            plt.subplot(rows, 3, count)
-            plt.imshow(x[idx[i], j, :, :, 0])
-            plt.title(str(y[idx[i]]))
-            count += 1
-    plt.savefig("processed_image.png")
-    """
+    print(ds)
+    for ii in range(100):
+        x,y=next(ds.as_numpy_iterator())
+        # print (np.min(x), np.max(x), np.unique(y))
+        count = 1
+        for i in range(global_batch_size):
+            for key in x.keys():
+                plt.subplot(global_batch_size, 3, count)
+                plt.imshow(x[key][i, :, :, 0])
+                plt.title(str(y[i]))
+                plt.xticks([]," ")
+                plt.yticks([], " ")
+                count += 1
+        plt.savefig("processed_image_combined_{}.png".format(ii))
+
+
 # dataset_train_coronal = get_dataset("tfrecords/tfrecords_fold_1/data-train_*",
 #                             n_classes=n_classes,
 #                             batch_size=global_batch_size,

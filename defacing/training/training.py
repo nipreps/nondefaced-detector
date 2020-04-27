@@ -1,16 +1,16 @@
 import argparse
-from keras.utils import multi_gpu_model
+from tensorflow.keras.utils import multi_gpu_model
 from ..models.modelN import Submodel, CombinedClassifier
 from ..helpers.metrics import specificity, sensitivity
 from ..helpers.utils import *
 from ..dataloaders.dataloader import DataGeneratoronFly
-from keras.models import load_model
-from keras import losses, metrics
-from keras.callbacks import ModelCheckpoint, LearningRateScheduler, TensorBoard
-from keras.optimizers import Adam
-from keras.losses import binary_crossentropy, mse
+from tensorflow.keras.models import load_model
+from tensorflow.keras import losses, metrics
+from tensorflow.keras.callbacks import ModelCheckpoint, LearningRateScheduler, TensorBoard
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.losses import binary_crossentropy, mse
 from imgaug import augmenters as iaa
-from keras import backend as K
+from tensorflow.keras import backend as K
 import os
 import sys
 from datetime import datetime
