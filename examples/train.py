@@ -27,15 +27,15 @@ os.environ["CUDA_VISIBLE_DEVICES"] = args.GPU
 print ("GPU Availability: ", tf.test.is_gpu_available(cuda_only=True, min_cuda_compute_capability=None))
 
 
-Kfolds = -1
-nfolds = list(range(0, Kfolds + 1))
+Kfolds = 9
+nfolds = list(range(1, Kfolds + 1))
 
 for fold in nfolds:
 	root_dir = './Logs/' + args.job_name + '/train_test_fold_{}'.format(fold)
 	dir_path = './Logs/' + args.job_name + '/train_test_fold_{}/csv/'.format(fold)
 
 	# currently a very hacky way of doing this -- will need to fix later
-	from_dir = os.path.abspath('./csv/faced_defaced/train_test_fold_{}/csv/'.format(fold))
+	from_dir = os.path.abspath('/work/06850/sbansal6/maverick2/mriqc-shared/csv/train_test_fold_{}/csv/'.format(fold))
 	to_dir = dir_path
 	copy_tree(from_dir, to_dir)
 
@@ -71,7 +71,7 @@ for fold in nfolds:
 			valid_csv_path,
 			basic_job_info,
 			model_path,
-			image_size = 32,
+			image_size = 64,
 			batch_size = 32,
 			initial_epoch = 0,
 			nepochs = 15,
@@ -91,7 +91,7 @@ root_dir = './Logs/' + args.job_name + '/train_test'
 dir_path = './Logs/' + args.job_name + '/train_test/csv/'
 
 # currently a very hacky way of doing this -- will need to fix later
-from_dir = os.path.abspath('./csv/faced_defaced')
+from_dir = os.path.abspath('/work/06850/sbansal6/maverick2/mriqc-shared/csv')
 
 train_csv_path = os.path.join(from_dir, 'all.csv')
 valid_csv_path = os.path.join(from_dir, 'all.csv')
@@ -125,7 +125,7 @@ train = trainer(train_csv_path,
 		valid_csv_path,
 		basic_job_info,
 		model_path,
-		image_size = 32,
+		image_size = 64,
 		batch_size = 32,
 		initial_epoch = 0,
 		nepochs = 15,

@@ -42,7 +42,7 @@ def train(
     tpaths = glob.glob(ROOTDIR+"tfrecords_no_ds001985/tfrecords_fold_2/data-train_*")
     vpaths = glob.glob(ROOTDIR+"tfrecords_no_ds001985/tfrecords_fold_2/data-valid_*")
 
-    planes = ["axial", "coronal", "sagittal", "combined"]
+    planes = ["combined"]#["axial", "coronal", "sagittal", "combined"]
 
     strategy = tf.distribute.MirroredStrategy()
     BATCH_SIZE_PER_REPLICA = batch_size
@@ -94,7 +94,8 @@ def train(
                 lr = 5e-5
                 model = modelN.CombinedClassifier(
                     input_shape=image_size, 
-                    dropout=dropout, 
+                    dropout=dropout,
+                    trainable=True, 
                     wts_root=cp_save_path
                 )
 

@@ -6,7 +6,7 @@ import nibabel as nb
 from scipy.ndimage import map_coordinates
 
 
-def conform_data(in_file, out_file=None, out_size=(256, 256, 256), out_zooms=(1.0, 1.0, 1.0), order=3):
+def conform_data(in_file, out_file=None, out_size=(32, 32, 32), out_zooms=(8.0, 8.0, 8.0), order=3):
     """Conform the input dataset to the canonical orientation."""
     if isinstance(in_file, (str, Path)):
         in_file = nb.load(in_file)
@@ -57,4 +57,4 @@ def conform_data(in_file, out_file=None, out_size=(256, 256, 256), out_zooms=(1.
     nii.to_filename(out_file)
     
     
-    # return out_file, resampled
+    return out_file, resampled

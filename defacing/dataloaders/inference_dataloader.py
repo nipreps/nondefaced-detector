@@ -30,6 +30,7 @@ class DataGeneratoronFly(object):
         # data = self.coreg.register_patient(
         #    data, self.fixed_image).astype('float64')
         _, data = conform_data(data)
+        print(data.shape)
         if all:
             return self.__data_generation(data, all=all)
 
@@ -142,7 +143,7 @@ class DataGeneratoronFly(object):
         """
         """
 
-        volume = self._resizeVolume(volume)
+        # volume = self._resizeVolume(volume)
         volume = self._standardize_volume(volume)
         volume = self._normalize_volume(volume)
 
