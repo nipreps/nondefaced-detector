@@ -13,7 +13,7 @@ ROOTDIR = '/work/06850/sbansal6/maverick2/mriqc-shared/'
 def apply_augmentations(features, labels):
 
     """ Apply <TYPE_OF> augmentation to the dataset
-    
+
     """
     #     iaa.SomeOf(
     #             (0, 3),
@@ -117,14 +117,14 @@ def clip(x, q =90):
     """
     min_val = 0
     max_val = tfp.stats.percentile(
-                x, q, axis=None, 
-                preserve_gradients=False, 
+                x, q, axis=None,
+                preserve_gradients=False,
                 name=None
                 )
     x = tf.clip_by_value(
-        x, 
-        min_val, 
-        max_val, 
+        x,
+        min_val,
+        max_val,
         name=None
         )
     return x
@@ -143,8 +143,8 @@ def standardize(x):
     if x.dtype != tf.float32:
         x = tf.cast(x, tf.float32)
     median = tfp.stats.percentile(
-                x, 50, axis=None, 
-                preserve_gradients=False, 
+                x, 50, axis=None,
+                preserve_gradients=False,
                 name=None
                 )
     mean, var = tf.nn.moments(x, axes=None)
@@ -167,14 +167,14 @@ def normalize(x):
         x = tf.cast(x, tf.float32)
 
     max_value = tf.math.reduce_max(
-                x, 
-                axis=None, 
+                x,
+                axis=None,
                 keepdims=False, name=None
                 )
 
     min_value = tf.math.reduce_min(
-                x, 
-                axis=None, 
+                x,
+                axis=None,
                 keepdims=False, name=None
                 )
     return (x - min_value) / (max_value - min_value + 1e-3)
@@ -194,15 +194,15 @@ def get_dataset(
     num_parallel_calls=AUTOTUNE,
 ):
 
-    """ Returns tf.data.Dataset after preprocessing from 
+    """ Returns tf.data.Dataset after preprocessing from
     tfrecords for training and validation
-    
+
     Parameters
     ----------
     file_pattern:
-    
+
     n_classes:
-    
+
     """
 
     files = glob.glob(file_pattern)
@@ -259,7 +259,7 @@ def get_dataset(
         return (x, y)
     if batch_size is not None:
         ds = ds.batch(batch_size=batch_size, drop_remainder=True)
-        # ds = ds.map(lambda x,y: (tf.reshape(x, ((3, batch_size*n,) if plane == "combined" else (batch_size*n,)) + volume_shape[:2] +(1,)), 
+        # ds = ds.map(lambda x,y: (tf.reshape(x, ((3, batch_size*n,) if plane == "combined" else (batch_size*n,)) + volume_shape[:2] +(1,)),
         #                         tf.reshape(y, (batch_size*n,))))
 
     if shuffle_buffer_size:
@@ -274,15 +274,15 @@ def get_dataset(
 def structural_slice(x, y, plane, n=4):
 
     """ Transpose dataset based on the plane
-    
+
     Parameters
     ----------
     x:
-    
+
     y:
-    
+
     plane:
-    
+
     """
 
     options = ["axial", "coronal", "sagittal", "combined"]
@@ -313,14 +313,14 @@ def structural_slice(x, y, plane, n=4):
                 temp[op] = structural_slice(x, y, op, n)[0]
             x = temp
 
-        if not plane == "combined": 
+        if not plane == "combined":
             # x = tf.squeeze(tf.gather_nd(x, idx.reshape(n, 1, 1)), axis=1)
             # x =  tf.image.rot90(
             #        x, k, name=None
             #     )
             x = tf.convert_to_tensor(tf.expand_dims(x[idx], axis=-1))
         # y = tf.repeat(y, n)
-        
+
         return x, y
     else:
         raise ValueError("expected plane to be one of ['axial', 'coronal', 'sagittal']")
@@ -341,7 +341,7 @@ if __name__ == "__main__":
         shuffle_buffer_size=3,
     )
 
-    import matplotlib 
+    import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
 
