@@ -17,11 +17,12 @@ def clip(x, q=90):
     
     return x
 
+
 def standardize(x):
     
     std = np.std(x)
     median = np.percentile(x, q=50,axis=None)
-    return (x - median) / std
+    return (x - np.mean(x)) / std
 
 def normalize(x):
     min_vol = np.min(x)
