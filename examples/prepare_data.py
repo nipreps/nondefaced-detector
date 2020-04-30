@@ -3,7 +3,8 @@ import matplotlib
 import os, sys
 sys.path.append('..')
 from defacing.preprocessing.normalization import clip, standardize, normalize
-from scipy.ndimage import map_coordinates
+from defacing.preprocessing.conform import conform_data
+from defacing.helpers.utils import load_vol, save_vol
 import numpy as np
 import nibabel as nib
 from glob import glob
@@ -11,14 +12,18 @@ import matplotlib.pyplot as plt
 
 
 orig_data_face   = '../sample_vols/faced'
-orig_data_face_mask = '../sample_vols/defaced'
+orig_data_face_mask = '../sample_vols/faced'
 
-save_data_face   = '../sample_vols/faced/conformed'
-save_data_deface = '../sample_vols/defaced/conformed'
+save_preprocessing_face   = '../sample_vols/faced/preprocessing'
+save_conformed_face   = '../sample_vols/faced/conformed'
 
-os.makedirs(save_data_face, exist_ok=True)
-os.makedirs(save_data_deface, exist_ok=True)
+save_preprocessing_deface   = '../sample_vols/faced/preprocessing'
+save_conformed_deface = '../sample_vols/defaced/conformed'
 
+os.makedirs(save_preprocessing_face, exist_ok=True)
+os.makedirs(save_preprocessing_deface, exist_ok=True)
+os.makedirs(save_conformed_face, exist_ok=True)
+os.makedirs(save_conformed_deface, exist_ok=True)
 
 conform_size = (64, 64, 64)
 conform_zoom = (4., 4., 4.)
@@ -27,23 +32,16 @@ def preprocess(pth, mask_path=None, debug=False):
     """
     """
     filename = pth.split('/')[-1]
-    in_file = nib.load(path)
-    dtype = in_file.header.get_data_dtype()
+    volume, affine, _ = load_vol(pth)
 
-    # Reorient to closest canonical
-    in_file = nib.as_closest_canonical(in_file)
-
-    # Calculate the factors to normalize voxel size to out_zooms
-    normed = np.array(conform_zoom) / np.array(in_file.header.get_zooms()[:3])
-
-    volume = np.array(in_file.dataobj)*1.0
-    volume = clip(volume, q=95)
+    volume = clip(volume, q=90)
     volume = normalize(volume)
     volume = standardize(volume)
     
-    
-    save_volume_path = os.path.join(save_data_face, filename)
-    
+    save_preprocessing_path = os.path.join(save_preprocessing_face, filename)
+    save_conformed_path = os.path.join(save_conformed_face, filename)    
+    save_vol(save_preprocessing_path, volume, affine)
+
     def _plot(data):
         f, axarr = plt.subplots(8, 8, figsize=(12, 12))
         for i in range(8):
@@ -51,6 +49,8 @@ def preprocess(pth, mask_path=None, debug=False):
                 axarr[i, j].imshow(np.rot90(data[:, :, j + 8*i], 1))
 
         plt.show()
+        
+        """
         plt.subplot(1, 3, 1)
         plt.imshow(np.rot90(np.mean(data, axis=0)))
         plt.subplot(1, 3, 2)
@@ -58,50 +58,29 @@ def preprocess(pth, mask_path=None, debug=False):
         plt.subplot(1, 3, 3)
         plt.imshow(np.rot90(np.mean(data, axis=2)))
         plt.show()
+        """
+    conform_data(save_preprocessing_path, 
+                 out_file=save_conformed_path, 
+                 out_size=conform_size, 
+                 out_zooms=conform_zoom)
 
-
-    def _conformation(data, save_path, order=3):
-        new_ijk = normed[:, np.newaxis] * np.array(np.meshgrid(
-            np.arange(conform_size[0]),
-            np.arange(conform_size[1]),
-            np.arange(conform_size[2]),
-            indexing="ij")
-        ).reshape((3, -1))
-        offset = 0.5 * (np.max(new_ijk, axis=1) - np.array(in_file.shape))
-        # Align the centers of the two sampling extents
-        new_ijk -= offset[:, np.newaxis]
-
-        # Resample data in the new grid
-        resampled = map_coordinates(
-            data,
-            new_ijk,
-            output=dtype,
-            order=order,
-            mode="constant",
-            cval=0,
-            prefilter=True,
-        ).reshape(conform_size)
-        resampled[resampled < 0] = 0
-        
-        if debug: _plot(resampled)
-
-        # Create a new x-form affine, aligned with cardinal axes, 1mm3 and centered.
-        newaffine = np.eye(4)
-        newaffine[:3, 3] = -0.5 * (np.array(conform_size) - 1)
-        nii = nib.Nifti1Image(resampled, newaffine, None)
-        nii.to_filename(save_path)
-        return save_path
-
-
-    _conformation(volume, save_volume_path)
+    if debug: _plot(load_vol(save_conformed_path)[0])
+    
     if mask_path:
         mask = np.array(nib.load(mask_path).dataobj)
         masked_volume = volume*mask
-        save_masked_path = os.path.join(save_data_deface, filename)
-        _conformation(masked_volume, save_masked_path)
-        
-        return save_volume_path, save_masked_path
-    return save_volume_path
+
+        save_mpreprocessing_path = os.path.join(save_preprocessing_deface, filename)
+        save_mconformed_path = os.path.join(save_conformed_deface, filename)    
+        save_vol(save_mpreprocessing_path, masked_volume, affine)
+
+        conform_data(save_mpreprocessing_path, 
+                 out_file=save_mconformed_path, 
+                 out_size=conform_size, 
+                 out_zooms=conform_zoom)        
+        return save_conformed_path, save_mconformed_path
+
+    return save_conformed_path
 
 
 

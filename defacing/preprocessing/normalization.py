@@ -22,7 +22,7 @@ def standardize(x):
     
     std = np.std(x)
     median = np.percentile(x, q=50,axis=None)
-    return (x - np.mean(x)) / std
+    return (x - median) / std
 
 def normalize(x):
     min_vol = np.min(x)
