@@ -13,7 +13,7 @@ ROOTDIR = '/work/06850/sbansal6/maverick2/mriqc-shared/'
 def apply_augmentations(features, labels):
 
     """ Apply <TYPE_OF> augmentation to the dataset
-    
+
     """
     #     iaa.SomeOf(
     #             (0, 3),
@@ -35,81 +35,6 @@ def apply_augmentations(features, labels):
     return
 
 
-# from nobrainer.dataset
-def tfrecord_dataset(
-    file_pattern,
-    volume_shape,
-    shuffle,
-    scalar_label,
-    compressed=True,
-    num_parallel_calls=None,
-):
-    """Return `tf.data.Dataset` from TFRecord files."""
-
-    dataset = tf.data.Dataset.list_files(file_pattern, shuffle=shuffle)
-    # Read each of these files as a TFRecordDataset.
-    # Assume all files have same compression type as the first file.
-    compression_type = "GZIP" if compressed else None
-    cycle_length = 1 if num_parallel_calls is None else num_parallel_calls
-    dataset = dataset.interleave(
-        map_func=lambda x: tf.data.TFRecordDataset(
-            x, compression_type=compression_type
-        ),
-        cycle_length=cycle_length,
-        num_parallel_calls=num_parallel_calls,
-    )
-    parse_fn = parse_example_fn(volume_shape=volume_shape, scalar_label=scalar_label)
-    dataset = dataset.map(map_func=parse_fn, num_parallel_calls=num_parallel_calls)
-    return dataset
-
-
-# from nobrainer.tfrecord
-def parse_example_fn(volume_shape, scalar_label=False):
-    """Return function that can be used to read TFRecord file into tensors.
-    Parameters
-    ----------
-    volume_shape: sequence, the shape of the feature data. If `scalar_label` is `False`,
-        this also corresponds to the shape of the label data.
-    scalar_label: boolean, if `True`, label is a scalar. If `False`, label must be the
-        same shape as feature data.
-    Returns
-    -------
-    Function with which a TFRecord file can be parsed.
-    """
-
-    @tf.function
-    def parse_example(serialized):
-        """Parse one example from a TFRecord file made with Nobrainer.
-        Parameters
-        ----------
-        serialized: str, serialized proto message.
-        Returns
-        -------
-        Tuple of two tensors. If `scalar_label` is `False`, both tensors have shape
-        `volume_shape`. Otherwise, the first tensor has shape `volume_shape`, and the
-        second is a scalar tensor.
-        """
-        features = {
-            "feature/shape": tf.io.FixedLenFeature(shape=[], dtype=tf.string),
-            "feature/value": tf.io.FixedLenFeature(shape=[], dtype=tf.string),
-            "label/value": tf.io.FixedLenFeature(shape=[], dtype=tf.string),
-            "label/rank": tf.io.FixedLenFeature(shape=[], dtype=tf.int64),
-        }
-        e = tf.io.parse_single_example(serialized=serialized, features=features)
-        x = tf.io.decode_raw(e["feature/value"], _TFRECORDS_DTYPE)
-        y = tf.io.decode_raw(e["label/value"], _TFRECORDS_DTYPE)
-        # TODO: this line does not work. The shape cannot be determined
-        # dynamically... for now.
-        # xshape = tf.cast(
-        #     tf.io.decode_raw(e["feature/shape"], _TFRECORDS_DTYPE), tf.int32)
-        x = tf.reshape(x, shape=volume_shape)
-        if not scalar_label:
-            y = tf.reshape(y, shape=volume_shape)
-        else:
-            y = tf.reshape(y, shape=[1])
-        return x, y
-
-    return parse_example
 
 
 def clip(x, q =90):
@@ -117,17 +42,28 @@ def clip(x, q =90):
     """
     min_val = 0
     max_val = tfp.stats.percentile(
-                x, q, axis=None, 
-                preserve_gradients=False, 
+                x, q, axis=None,
+                preserve_gradients=False,
                 name=None
                 )
     x = tf.clip_by_value(
-        x, 
-        min_val, 
-        max_val, 
+        x,
+        min_val,
+        max_val,
         name=None
         )
     return x
+
+def _magic_slicing_(shape):
+    """
+    """
+    idx = []
+    for ii in np.arange(shape[0]):
+        if (ii % shape[0]**0.5) == 0:
+            idx.append(ii)
+    idx = np.array(idx)
+    return idx
+
 
 def standardize(x):
     """Standard score input tensor.
@@ -143,8 +79,8 @@ def standardize(x):
     if x.dtype != tf.float32:
         x = tf.cast(x, tf.float32)
     median = tfp.stats.percentile(
-                x, 50, axis=None, 
-                preserve_gradients=False, 
+                x, 50, axis=None,
+                preserve_gradients=False,
                 name=None
                 )
     mean, var = tf.nn.moments(x, axes=None)
@@ -167,14 +103,14 @@ def normalize(x):
         x = tf.cast(x, tf.float32)
 
     max_value = tf.math.reduce_max(
-                x, 
-                axis=None, 
+                x,
+                axis=None,
                 keepdims=False, name=None
                 )
 
     min_value = tf.math.reduce_min(
-                x, 
-                axis=None, 
+                x,
+                axis=None,
                 keepdims=False, name=None
                 )
     return (x - min_value) / (max_value - min_value + 1e-3)
@@ -194,15 +130,15 @@ def get_dataset(
     num_parallel_calls=AUTOTUNE,
 ):
 
-    """ Returns tf.data.Dataset after preprocessing from 
+    """ Returns tf.data.Dataset after preprocessing from
     tfrecords for training and validation
-    
+
     Parameters
     ----------
     file_pattern:
-    
+
     n_classes:
-    
+
     """
 
     files = glob.glob(file_pattern)
@@ -259,7 +195,7 @@ def get_dataset(
         return (x, y)
     if batch_size is not None:
         ds = ds.batch(batch_size=batch_size, drop_remainder=True)
-        # ds = ds.map(lambda x,y: (tf.reshape(x, ((3, batch_size*n,) if plane == "combined" else (batch_size*n,)) + volume_shape[:2] +(1,)), 
+        # ds = ds.map(lambda x,y: (tf.reshape(x, ((3, batch_size*n,) if plane == "combined" else (batch_size*n,)) + volume_shape[:2] +(1,)),
         #                         tf.reshape(y, (batch_size*n,))))
 
     if shuffle_buffer_size:
@@ -274,36 +210,38 @@ def get_dataset(
 def structural_slice(x, y, plane, n=4):
 
     """ Transpose dataset based on the plane
-    
+
     Parameters
     ----------
     x:
-    
+
     y:
-    
+
     plane:
-    
+
     """
 
     options = ["axial", "coronal", "sagittal", "combined"]
     shape = np.array(x.shape)
+    mean_idx = _magic_slicing_(shape)
+
     x = clip(x)
     x = normalize(x)
     x = standardize(x)
 
     if isinstance(plane, str) and plane in options:
         if plane == "axial":
-            idx = np.random.randint(2*shape[0]//5, 3*shape[0]//5)
+            idx = np.random.randint(int(shape[0]**0.5))
             x = x
             k = 3
 
         if plane == "coronal":
-            idx = np.random.randint(2*shape[1]//4, 3*shape[1]//4)
+            idx = np.random.randint(int(shape[1]**0.5))
             x = tf.transpose(x, perm=[1, 2, 0])
             k = 2
 
         if plane == "sagittal":
-            idx = np.random.randint(shape[2]//3, 2*shape[2]//3)
+            idx = np.random.randint(int(shape[2]**0.5))
             x = tf.transpose(x, perm=[2, 0, 1])
             k = 1
 
@@ -313,14 +251,16 @@ def structural_slice(x, y, plane, n=4):
                 temp[op] = structural_slice(x, y, op, n)[0]
             x = temp
 
-        if not plane == "combined": 
-            # x = tf.squeeze(tf.gather_nd(x, idx.reshape(n, 1, 1)), axis=1)
-            # x =  tf.image.rot90(
-            #        x, k, name=None
-            #     )
-            x = tf.convert_to_tensor(tf.expand_dims(x[idx], axis=-1))
+        if not plane == "combined":
+            x = tf.squeeze(tf.gather_nd(x, (mean_idx + idx).reshape(int(shape[0]**0.5), 1, 1)), axis=1)
+            x = tf.math.reduce_mean(x, axis=0)
+            x = tf.convert_to_tensor(tf.expand_dims(x, axis=-1))
+            x =  tf.image.rot90(
+                   x, k, name=None
+                )
+
         # y = tf.repeat(y, n)
-        
+
         return x, y
     else:
         raise ValueError("expected plane to be one of ['axial', 'coronal', 'sagittal']")
@@ -333,7 +273,7 @@ if __name__ == "__main__":
     global_batch_size = 8
     volume_shape = (64, 64, 64)
     ds = get_dataset(
-        ROOTDIR + "tfrecords_no_ds001985/tfrecords_fold_1/data-train_*",
+        ROOTDIR + "tfrecords/tfrecords_fold_1/data-train_*",
         n_classes=n_classes,
         batch_size=global_batch_size,
         volume_shape=volume_shape,
@@ -341,7 +281,7 @@ if __name__ == "__main__":
         shuffle_buffer_size=3,
     )
 
-    import matplotlib 
+    import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
 
