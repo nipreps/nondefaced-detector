@@ -84,56 +84,56 @@ def checkNonConformed(orig_path, save_path):
             count += 1
             print("Not conformed file: ", f)
 
+if __name__=="__main__":
+    for path in glob(orig_data_face + "/*/*.nii*"):
+        try:
+            print("Orig Path: ", path)
+            if not is_gz_file(path) and os.path.splitext(path)[1] == ".gz":
+                tempname = path.split("/")[-1]
+                ds = path.split("/")[-2]
+                rename_file = os.path.splitext(tempname)[0]
+                dst = os.path.join(save_data_face, rename_file)
+                print(dst)
+                subprocess.call(["cp", path, dst])
+                ds_save_path = os.path.join(save_data_face, ds)
+                if not os.path.exists(ds_save_path):
+                    os.makedirs(ds_save_path)
+                print(preprocess(dst, conform_size, save_data_path=ds_save_path))
+            else:
+                ds = path.split("/")[-2]
+                ds_save_path = os.path.join(save_data_face, ds)
+                if not os.path.exists(ds_save_path):
+                    os.makedirs(ds_save_path)
+                print(preprocess(path, conform_size, save_data_path=ds_save_path))
+        except:
+            print("Preprocessing incomplete. Exception occurred.")
+            pass
 
-for path in glob(orig_data_face + "/*/*.nii*"):
-    try:
-        print("Orig Path: ", path)
-        if not is_gz_file(path) and os.path.splitext(path)[1] == ".gz":
-            tempname = path.split("/")[-1]
-            ds = path.split("/")[-2]
-            rename_file = os.path.splitext(tempname)[0]
-            dst = os.path.join(save_data_face, rename_file)
-            print(dst)
-            subprocess.call(["cp", path, dst])
-            ds_save_path = os.path.join(save_data_face, ds)
-            if not os.path.exists(ds_save_path):
-                os.makedirs(ds_save_path)
-            print(preprocess(dst, conform_size, save_data_path=ds_save_path))
-        else:
-            ds = path.split("/")[-2]
-            ds_save_path = os.path.join(save_data_face, ds)
-            if not os.path.exists(ds_save_path):
-                os.makedirs(ds_save_path)
-            print(preprocess(path, conform_size, save_data_path=ds_save_path))
-    except:
-        print("Preprocessing incomplete. Exception occurred.")
-        pass
+
+    for path in glob(orig_data_deface + "/*/*.nii*"):
+        try:
+            print("Orig Path: ", path)
+            if not is_gz_file(path) and os.path.splitext(path)[1] == ".gz":
+                tempname = path.split("/")[-1]
+                ds = path.split("/")[-2]
+                rename_file = os.path.splitext(tempname)[0]
+                dst = os.path.join(save_data_deface, rename_file)
+                print(dst)
+                subprocess.call(["cp", path, dst])
+                ds_save_path = os.path.join(save_data_deface, ds)
+                if not os.path.exists(ds_save_path):
+                    os.makedirs(ds_save_path)
+                print(preprocess(dst, conform_size, save_data_path=ds_save_path))
+            else:
+                ds = path.split("/")[-2]
+                ds_save_path = os.path.join(save_data_deface, ds)
+                if not os.path.exists(ds_save_path):
+                    os.makedirs(ds_save_path)
+                print(preprocess(path, conform_size, save_data_path=ds_save_path))
+        except:
+            print("Preprocessing incomplete. Exception occurred.")
+            pass
 
 
-for path in glob(orig_data_deface + "/*/*.nii*"):
-    try:
-        print("Orig Path: ", path)
-        if not is_gz_file(path) and os.path.splitext(path)[1] == ".gz":
-            tempname = path.split("/")[-1]
-            ds = path.split("/")[-2]
-            rename_file = os.path.splitext(tempname)[0]
-            dst = os.path.join(save_data_deface, rename_file)
-            print(dst)
-            subprocess.call(["cp", path, dst])
-            ds_save_path = os.path.join(save_data_deface, ds)
-            if not os.path.exists(ds_save_path):
-                os.makedirs(ds_save_path)
-            print(preprocess(dst, conform_size, save_data_path=ds_save_path))
-        else:
-            ds = path.split("/")[-2]
-            ds_save_path = os.path.join(save_data_deface, ds)
-            if not os.path.exists(ds_save_path):
-                os.makedirs(ds_save_path)
-            print(preprocess(path, conform_size, save_data_path=ds_save_path))
-    except:
-        print("Preprocessing incomplete. Exception occurred.")
-        pass
-    
-
-checkNonConformed(orig_data_face, save_data_face)
-checkNonConformed(orig_data_deface, save_data_deface)
+    checkNonConformed(orig_data_face, save_data_face)
+    checkNonConformed(orig_data_deface, save_data_deface)
