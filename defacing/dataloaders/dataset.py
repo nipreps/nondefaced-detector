@@ -259,8 +259,6 @@ def structural_slice(x, y, plane, n=4):
                    x, k, name=None
                 )
 
-        # y = tf.repeat(y, n)
-
         return x, y
     else:
         raise ValueError("expected plane to be one of ['axial', 'coronal', 'sagittal']")
