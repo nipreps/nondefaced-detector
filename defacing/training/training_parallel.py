@@ -21,13 +21,14 @@ import nobrainer
 from tensorflow.keras import metrics
 from tensorflow.keras import losses
 
-ROOTDIR = '/work/06850/sbansal6/maverick2/mriqc-shared/'
+ROOTDIR = "/work/06850/sbansal6/maverick2/mriqc-shared/"
+
 
 def scheduler(epoch):
-  if epoch < 3:
-    return 0.001
-  else:
-    return 0.001 * tf.math.exp(0.1 * (10 - epoch))
+    if epoch < 3:
+        return 0.001
+    else:
+        return 0.001 * tf.math.exp(0.1 * (10 - epoch))
 
 
 def train(
@@ -39,8 +40,8 @@ def train(
     n_epochs=30,
 ):
 
-    tpaths = glob.glob(ROOTDIR+"tfrecords/tfrecords_fold_2/data-train_*")
-    vpaths = glob.glob(ROOTDIR+"tfrecords/tfrecords_fold_2/data-valid_*")
+    tpaths = glob.glob(ROOTDIR + "tfrecords/tfrecords_fold_2/data-train_*")
+    vpaths = glob.glob(ROOTDIR + "tfrecords/tfrecords_fold_2/data-valid_*")
 
     planes = ["axial", "coronal", "sagittal", "combined"]
 
@@ -58,7 +59,6 @@ def train(
     logdir_path = os.path.join(model_save_path, "tb_logs")
     if not os.path.exists(logdir_path):
         os.makedirs(logdir_path)
-
 
     for plane in planes:
 
@@ -81,7 +81,7 @@ def train(
 
         with strategy.scope():
 
-            if not plane == "combined": 
+            if not plane == "combined":
                 lr = 1e-4
                 model = modelN.Submodel(
                     input_shape=image_size,
@@ -93,13 +93,11 @@ def train(
             else:
                 lr = 5e-5
                 model = modelN.CombinedClassifier(
-                    input_shape=image_size, 
+                    input_shape=image_size,
                     dropout=dropout,
-                    trainable=True, 
-                    wts_root=cp_save_path
+                    trainable=True,
+                    wts_root=cp_save_path,
                 )
-
-
 
             print("Submodel: ", plane)
             print(model.summary())
@@ -117,7 +115,7 @@ def train(
 
             model.compile(
                 loss=tf.keras.losses.binary_crossentropy,
-                optimizer=Adam(learning_rate = lr),
+                optimizer=Adam(learning_rate=lr),
                 metrics=METRICS,
             )
 
@@ -142,18 +140,18 @@ def train(
         )
 
         steps_per_epoch = nobrainer.dataset.get_steps_per_epoch(
-             n_volumes=len(tpaths),
-             volume_shape=volume_shape,
-             block_shape=volume_shape,
-             batch_size=global_batch_size,
-         )
+            n_volumes=len(tpaths),
+            volume_shape=volume_shape,
+            block_shape=volume_shape,
+            batch_size=global_batch_size,
+        )
 
         validation_steps = nobrainer.dataset.get_steps_per_epoch(
-             n_volumes=len(vpaths),
-             volume_shape=volume_shape,
-             block_shape=volume_shape,
-             batch_size=global_batch_size,
-         )
+            n_volumes=len(vpaths),
+            volume_shape=volume_shape,
+            block_shape=volume_shape,
+            batch_size=global_batch_size,
+        )
 
         print(steps_per_epoch, validation_steps)
 
@@ -169,8 +167,6 @@ def train(
 
         del model
         K.clear_session()
-
-    
 
 
 if __name__ == "__main__":
