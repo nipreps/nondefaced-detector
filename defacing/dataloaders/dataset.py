@@ -225,15 +225,15 @@ def structural_slice(x, y, plane, n=4):
     shape = np.array(x.shape)
     mean_idx = _magic_slicing_(shape)
 
-    x = clip(x)
-    x = normalize(x)
-    x = standardize(x)
+    # x = clip(x)
+    # x = normalize(x)
+    # x = standardize(x)
 
     if isinstance(plane, str) and plane in options:
         if plane == "axial":
             idx = np.random.randint(int(shape[0]**0.5))
             x = x
-            k = 3
+            k = 1
 
         if plane == "coronal":
             idx = np.random.randint(int(shape[1]**0.5))
