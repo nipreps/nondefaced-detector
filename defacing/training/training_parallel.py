@@ -2,11 +2,11 @@
 import sys, os
 import glob
 
-sys.path.append("..")
+# sys.path.append("..")
 
 # Custom packages
-from models import modelN
-from dataloaders.dataset import get_dataset
+from ..models import modelN
+from ..dataloaders.dataset import get_dataset
 
 # Tf packages
 import tensorflow as tf
@@ -37,10 +37,11 @@ def train(
     batch_size=8,
     n_classes=2,
     n_epochs=30,
+    fold=1
 ):
 
-    tpaths = glob.glob(ROOTDIR+"tfrecords/tfrecords_fold_2/data-train_*")
-    vpaths = glob.glob(ROOTDIR+"tfrecords/tfrecords_fold_2/data-valid_*")
+    tpaths = glob.glob(ROOTDIR+"tfrecords/tfrecords_fold_{}/data-train_*".format(fold))
+    vpaths = glob.glob(ROOTDIR+"tfrecords/tfrecords_fold_{}/data-valid_*".format(fold))
 
     planes = ["axial", "coronal", "sagittal", "combined"]
 
@@ -48,7 +49,7 @@ def train(
     BATCH_SIZE_PER_REPLICA = batch_size
     global_batch_size = BATCH_SIZE_PER_REPLICA * strategy.num_replicas_in_sync
 
-    model_save_path = "./model_save_dir"
+    model_save_path = "./model_save_dir/folds_{}".format(fold)
 
     if not os.path.exists(model_save_path):
         os.makedirs(model_save_path)
@@ -82,7 +83,7 @@ def train(
         with strategy.scope():
 
             if not plane == "combined": 
-                lr = 1e-4
+                lr = 1e-3
                 model = modelN.Submodel(
                     input_shape=image_size,
                     dropout=dropout,
@@ -91,7 +92,7 @@ def train(
                     weights=None,
                 )
             else:
-                lr = 5e-5
+                lr = 5e-4
                 model = modelN.CombinedClassifier(
                     input_shape=image_size, 
                     dropout=dropout,
@@ -124,7 +125,7 @@ def train(
         print("GLOBAL BATCH SIZE: ", global_batch_size)
 
         dataset_train = get_dataset(
-            ROOTDIR + "tfrecords/tfrecords_fold_2/data-train_*",
+            ROOTDIR + "tfrecords/tfrecords_fold_{}/data-train_*".format(fold),
             n_classes=n_classes,
             batch_size=global_batch_size,
             volume_shape=volume_shape,
@@ -133,7 +134,7 @@ def train(
         )
 
         dataset_valid = get_dataset(
-            ROOTDIR + "tfrecords/tfrecords_fold_2/data-valid_*",
+            ROOTDIR + "tfrecords/tfrecords_fold_{}/data-valid_*".format(fold),
             n_classes=n_classes,
             batch_size=global_batch_size,
             volume_shape=volume_shape,
@@ -164,7 +165,7 @@ def train(
             steps_per_epoch=steps_per_epoch,
             validation_data=dataset_valid,
             validation_steps=validation_steps,
-            callbacks=[tbCallback, lrcallback, model_checkpoint],
+            callbacks=[tbCallback, model_checkpoint],
         )
 
         del model
@@ -174,4 +175,5 @@ def train(
 
 
 if __name__ == "__main__":
-    train()
+    for fold in range(1, 11):
+        train(fold=fold)
