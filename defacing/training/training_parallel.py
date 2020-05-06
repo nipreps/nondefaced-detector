@@ -39,10 +39,10 @@ def train(
     n_epochs=30,
 ):
 
-    tpaths = glob.glob(ROOTDIR+"tfrecords_no_ds001985/tfrecords_fold_2/data-train_*")
-    vpaths = glob.glob(ROOTDIR+"tfrecords_no_ds001985/tfrecords_fold_2/data-valid_*")
+    tpaths = glob.glob(ROOTDIR+"tfrecords/tfrecords_fold_2/data-train_*")
+    vpaths = glob.glob(ROOTDIR+"tfrecords/tfrecords_fold_2/data-valid_*")
 
-    planes = ["combined"]#["axial", "coronal", "sagittal", "combined"]
+    planes = ["axial", "coronal", "sagittal", "combined"]
 
     strategy = tf.distribute.MirroredStrategy()
     BATCH_SIZE_PER_REPLICA = batch_size
@@ -124,7 +124,7 @@ def train(
         print("GLOBAL BATCH SIZE: ", global_batch_size)
 
         dataset_train = get_dataset(
-            ROOTDIR + "tfrecords_no_ds001985/tfrecords_fold_2/data-train_*",
+            ROOTDIR + "tfrecords/tfrecords_fold_2/data-train_*",
             n_classes=n_classes,
             batch_size=global_batch_size,
             volume_shape=volume_shape,
@@ -133,7 +133,7 @@ def train(
         )
 
         dataset_valid = get_dataset(
-            ROOTDIR + "tfrecords_no_ds001985/tfrecords_fold_2/data-valid_*",
+            ROOTDIR + "tfrecords/tfrecords_fold_2/data-valid_*",
             n_classes=n_classes,
             batch_size=global_batch_size,
             volume_shape=volume_shape,

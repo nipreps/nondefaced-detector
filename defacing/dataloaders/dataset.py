@@ -54,6 +54,17 @@ def clip(x, q =90):
         )
     return x
 
+def _magic_slicing_(shape):
+    """
+    """
+    idx = []
+    for ii in np.arange(shape[0]):
+        if (ii % shape[0]**0.5) == 0:
+            idx.append(ii)
+    idx = np.array(idx)
+    return idx
+
+
 def standardize(x):
     """Standard score input tensor.
     Implements `(x - mean(x)) / stdev(x)`.
@@ -212,23 +223,25 @@ def structural_slice(x, y, plane, n=4):
 
     options = ["axial", "coronal", "sagittal", "combined"]
     shape = np.array(x.shape)
+    mean_idx = _magic_slicing_(shape)
+
     x = clip(x)
     x = normalize(x)
     x = standardize(x)
 
     if isinstance(plane, str) and plane in options:
         if plane == "axial":
-            idx = np.random.randint(2*shape[0]//5, 3*shape[0]//5)
+            idx = np.random.randint(int(shape[0]**0.5))
             x = x
             k = 3
 
         if plane == "coronal":
-            idx = np.random.randint(2*shape[1]//4, 3*shape[1]//4)
+            idx = np.random.randint(int(shape[1]**0.5))
             x = tf.transpose(x, perm=[1, 2, 0])
             k = 2
 
         if plane == "sagittal":
-            idx = np.random.randint(shape[2]//3, 2*shape[2]//3)
+            idx = np.random.randint(int(shape[2]**0.5))
             x = tf.transpose(x, perm=[2, 0, 1])
             k = 1
 
@@ -239,12 +252,12 @@ def structural_slice(x, y, plane, n=4):
             x = temp
 
         if not plane == "combined":
-            # x = tf.squeeze(tf.gather_nd(x, idx.reshape(n, 1, 1)), axis=1)
-            # x =  tf.image.rot90(
-            #        x, k, name=None
-            #     )
-            x = tf.convert_to_tensor(tf.expand_dims(x[idx], axis=-1))
-        # y = tf.repeat(y, n)
+            x = tf.squeeze(tf.gather_nd(x, (mean_idx + idx).reshape(int(shape[0]**0.5), 1, 1)), axis=1)
+            x = tf.math.reduce_mean(x, axis=0)
+            x = tf.convert_to_tensor(tf.expand_dims(x, axis=-1))
+            x =  tf.image.rot90(
+                   x, k, name=None
+                )
 
         return x, y
     else:
@@ -258,7 +271,7 @@ if __name__ == "__main__":
     global_batch_size = 8
     volume_shape = (64, 64, 64)
     ds = get_dataset(
-        ROOTDIR + "tfrecords_no_ds001985/tfrecords_fold_1/data-train_*",
+        ROOTDIR + "tfrecords/tfrecords_fold_1/data-train_*",
         n_classes=n_classes,
         batch_size=global_batch_size,
         volume_shape=volume_shape,
