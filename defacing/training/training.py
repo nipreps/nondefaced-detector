@@ -6,7 +6,11 @@ from ..helpers.utils import *
 from ..dataloaders.dataloader import DataGeneratoronFly
 from tensorflow.keras.models import load_model
 from tensorflow.keras import losses, metrics
-from tensorflow.keras.callbacks import ModelCheckpoint, LearningRateScheduler, TensorBoard
+from tensorflow.keras.callbacks import (
+    ModelCheckpoint,
+    LearningRateScheduler,
+    TensorBoard,
+)
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.losses import binary_crossentropy, mse
 from imgaug import augmenters as iaa
