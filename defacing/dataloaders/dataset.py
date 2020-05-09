@@ -12,6 +12,8 @@ import numpy as np
 AUTOTUNE = tf.data.experimental.AUTOTUNE
 ROOTDIR = '/work/06850/sbansal6/maverick2/mriqc-shared/'
 DISTRIBUTION = load_vol('../helpers/distribution.nii.gz')[0]
+DISTRIBUTION /= DISTRIBUTION.sum()
+
 sampler = lambda n: np.array([ np.unravel_index(
           np.random.choice(np.arange(np.prod(DISTRIBUTION.shape)),
                                      p = DISTRIBUTION.ravel()),
@@ -162,16 +164,19 @@ def structural_slice(x, y, plane, n=4):
     if isinstance(plane, str) and plane in options:
         if plane == "axial":
             idx = np.random.randint(shape[0]**0.5)
+            midx = sampler(n)[:, 0]
             x = x
             k = 3
 
         if plane == "coronal":
             idx = np.random.randint(shape[1]**0.5)
+            midx = sampler(n)[:, 1]
             x = tf.transpose(x, perm=[1, 2, 0])
             k = 2
 
         if plane == "sagittal":
             idx = np.random.randint(shape[2]**0.5)
+            midx = sampler(n)[:, 2]
             x = tf.transpose(x, perm=[2, 0, 1])
             k = 1
 
@@ -182,9 +187,9 @@ def structural_slice(x, y, plane, n=4):
             x = temp
 
         if not plane == "combined":
-            x = tf.squeeze(tf.gather_nd(x, sampler(n).reshape(n, 1, 1)), axis=1)
-            x = tf.mean(x, axis=0)
-            x = tf.convert_to_tensor(tf.expand_dims(x[idx], axis=-1))
+            x = tf.squeeze(tf.gather_nd(x, midx.reshape(n, 1, 1)), axis=1)
+            x = tf.math.reduce_mean(x, axis=0)
+            x = tf.convert_to_tensor(tf.expand_dims(x, axis=-1))
             x =  tf.image.rot90(
                    x, k, name=None
                 )
