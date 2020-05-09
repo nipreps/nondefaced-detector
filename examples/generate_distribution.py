@@ -41,7 +41,7 @@ for path in glob(orig_data_mask+'/*/*.nii.gz'):
                  out_zooms=conform_zoom,
                  order=0)
     print("conform")
-    conformed_mask = load_vol(os.path.join(conform_path, filename))[0]
+    conformed_mask = 1 - load_vol(os.path.join(conform_path, filename))[0]
     normalization += 1
     probability_distribution += conformed_mask*1.
     print (path, np.min(probability_distribution), np.max(probability_distribution))
