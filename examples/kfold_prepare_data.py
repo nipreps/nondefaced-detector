@@ -9,8 +9,8 @@ from glob import glob
 orig_data_face = '/work/01329/poldrack/data/mriqc-net/face/T1w'
 orig_data_deface = '/work/01329/poldrack/data/mriqc-net/defaced'
 
-regis_data_face = '/work/06595/kavinash/mriqc-shared-directory/Registered/face'
-regis_data_deface = '/work/06595/kavinash/mriqc-shared-directory/Registered/defaced'
+regis_data_face = '/work/06850/sbansal6/maverick2/mriqc-shared/conformed/face'#'/work/06595/kavinash/mriqc-shared-directory/Registered/face'
+regis_data_deface ='/work/06850/sbansal6/maverick2/mriqc-shared/conformed/deface'# '/work/06595/kavinash/mriqc-shared-directory/Registered/defaced'
 
 
 faced_path = []
@@ -30,7 +30,7 @@ for pth in glob(regis_data_deface + '/*/*.nii.gz'):
         except: pass
 
 
-save_path = './csv/faced_defaced'
+save_path = '/work/06850/sbansal6/maverick2/mriqc-shared/csv/'
 
 os.makedirs(save_path, exist_ok=True)
 path = []

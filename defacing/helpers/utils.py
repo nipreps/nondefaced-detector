@@ -13,6 +13,13 @@ import tensorflow as tf
 from tensorflow.python.client import device_lib
 
 
+def is_gz_file(filepath):
+    if os.path.splitext(filepath)[1] == ".gz":
+        with open(filepath, "rb") as test_f:
+            return binascii.hexlify(test_f.read(2)) == b"1f8b"
+    return False
+
+
 def save_vol(save_path, tensor_3d, affine):
     """
             save_path: path to write the volume to

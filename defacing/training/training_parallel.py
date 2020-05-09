@@ -2,11 +2,11 @@
 import sys, os
 import glob
 
-sys.path.append("..")
+# sys.path.append("..")
 
 # Custom packages
-from models import modelN
-from dataloaders.dataset import get_dataset
+from ..models import modelN
+from ..dataloaders.dataset import get_dataset
 
 # Tf packages
 import tensorflow as tf
@@ -21,13 +21,14 @@ import nobrainer
 from tensorflow.keras import metrics
 from tensorflow.keras import losses
 
-ROOTDIR = '/work/06850/sbansal6/maverick2/mriqc-shared/'
+ROOTDIR = "/work/06850/sbansal6/maverick2/mriqc-shared/"
+
 
 def scheduler(epoch):
-  if epoch < 3:
-    return 0.001
-  else:
-    return 0.001 * tf.math.exp(0.1 * (10 - epoch))
+    if epoch < 3:
+        return 0.001
+    else:
+        return 0.001 * tf.math.exp(0.1 * (10 - epoch))
 
 
 def train(
@@ -37,18 +38,18 @@ def train(
     batch_size=8,
     n_classes=2,
     n_epochs=30,
+    fold=1
 ):
+    tpaths = glob.glob(ROOTDIR+"tfrecords/tfrecords_fold_{}/data-train_*".format(fold))
+    vpaths = glob.glob(ROOTDIR+"tfrecords/tfrecords_fold_{}/data-valid_*".format(fold))
 
-    tpaths = glob.glob(ROOTDIR+"tfrecords_no_ds001985/tfrecords_fold_2/data-train_*")
-    vpaths = glob.glob(ROOTDIR+"tfrecords_no_ds001985/tfrecords_fold_2/data-valid_*")
-
-    planes = ["combined"]#["axial", "coronal", "sagittal", "combined"]
+    planes = ["axial", "coronal", "sagittal", "combined"]
 
     strategy = tf.distribute.MirroredStrategy()
     BATCH_SIZE_PER_REPLICA = batch_size
     global_batch_size = BATCH_SIZE_PER_REPLICA * strategy.num_replicas_in_sync
 
-    model_save_path = "./model_save_dir"
+    model_save_path = "./model_save_dir/folds_{}".format(fold)
 
     if not os.path.exists(model_save_path):
         os.makedirs(model_save_path)
@@ -58,7 +59,6 @@ def train(
     logdir_path = os.path.join(model_save_path, "tb_logs")
     if not os.path.exists(logdir_path):
         os.makedirs(logdir_path)
-
 
     for plane in planes:
 
@@ -82,7 +82,7 @@ def train(
         with strategy.scope():
 
             if not plane == "combined": 
-                lr = 1e-4
+                lr = 1e-3
                 model = modelN.Submodel(
                     input_shape=image_size,
                     dropout=dropout,
@@ -91,15 +91,13 @@ def train(
                     weights=None,
                 )
             else:
-                lr = 5e-5
+                lr = 5e-4
                 model = modelN.CombinedClassifier(
-                    input_shape=image_size, 
+                    input_shape=image_size,
                     dropout=dropout,
-                    trainable=True, 
-                    wts_root=cp_save_path
+                    trainable=True,
+                    wts_root=cp_save_path,
                 )
-
-
 
             print("Submodel: ", plane)
             print(model.summary())
@@ -117,14 +115,14 @@ def train(
 
             model.compile(
                 loss=tf.keras.losses.binary_crossentropy,
-                optimizer=Adam(learning_rate = lr),
+                optimizer=Adam(learning_rate=lr),
                 metrics=METRICS,
             )
 
         print("GLOBAL BATCH SIZE: ", global_batch_size)
 
         dataset_train = get_dataset(
-            ROOTDIR + "tfrecords_no_ds001985/tfrecords_fold_2/data-train_*",
+            ROOTDIR + "tfrecords/tfrecords_fold_{}/data-train_*".format(fold),
             n_classes=n_classes,
             batch_size=global_batch_size,
             volume_shape=volume_shape,
@@ -133,7 +131,7 @@ def train(
         )
 
         dataset_valid = get_dataset(
-            ROOTDIR + "tfrecords_no_ds001985/tfrecords_fold_2/data-valid_*",
+            ROOTDIR + "tfrecords/tfrecords_fold_{}/data-valid_*".format(fold),
             n_classes=n_classes,
             batch_size=global_batch_size,
             volume_shape=volume_shape,
@@ -142,18 +140,18 @@ def train(
         )
 
         steps_per_epoch = nobrainer.dataset.get_steps_per_epoch(
-             n_volumes=len(tpaths),
-             volume_shape=volume_shape,
-             block_shape=volume_shape,
-             batch_size=global_batch_size,
-         )
+            n_volumes=len(tpaths),
+            volume_shape=volume_shape,
+            block_shape=volume_shape,
+            batch_size=global_batch_size,
+        )
 
         validation_steps = nobrainer.dataset.get_steps_per_epoch(
-             n_volumes=len(vpaths),
-             volume_shape=volume_shape,
-             block_shape=volume_shape,
-             batch_size=global_batch_size,
-         )
+            n_volumes=len(vpaths),
+            volume_shape=volume_shape,
+            block_shape=volume_shape,
+            batch_size=global_batch_size,
+        )
 
         print(steps_per_epoch, validation_steps)
 
@@ -164,14 +162,13 @@ def train(
             steps_per_epoch=steps_per_epoch,
             validation_data=dataset_valid,
             validation_steps=validation_steps,
-            callbacks=[tbCallback, lrcallback, model_checkpoint],
+            callbacks=[tbCallback, model_checkpoint],
         )
 
         del model
         K.clear_session()
 
-    
-
 
 if __name__ == "__main__":
-    train()
+    for fold in range(1, 11):
+        train(fold=fold)

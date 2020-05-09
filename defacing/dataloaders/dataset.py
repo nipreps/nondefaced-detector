@@ -41,6 +41,7 @@ def apply_augmentations(features, labels):
 
     return
 
+<<<<<<< HEAD
 
 
 
@@ -81,46 +82,17 @@ def standardize(x):
     Returns
     -------
     Tensor of standardized values. Output has mean 0 and standard deviation 1.
+=======
+def _magic_slicing_(shape):
+>>>>>>> 5afa5b7e9f5889b53a6699ecbad39d2aae3b12c3
     """
-    x = tf.convert_to_tensor(x)
-    if x.dtype != tf.float32:
-        x = tf.cast(x, tf.float32)
-    median = tfp.stats.percentile(
-                x, 50, axis=None,
-                preserve_gradients=False,
-                name=None
-                )
-    mean, var = tf.nn.moments(x, axes=None)
-    std = tf.sqrt(var)
-    return (x - median) / std
-
-
-def normalize(x):
-    """Standard score input tensor.
-    Implements `(x - mean(x)) / stdev(x)`.
-    Parameters
-    ----------
-    x: tensor, values to standardize.
-    Returns
-    -------
-    Tensor of standardized values. Output has mean 0 and standard deviation 1.
     """
-    x = tf.convert_to_tensor(x)
-    if x.dtype != tf.float32:
-        x = tf.cast(x, tf.float32)
-
-    max_value = tf.math.reduce_max(
-                x,
-                axis=None,
-                keepdims=False, name=None
-                )
-
-    min_value = tf.math.reduce_min(
-                x,
-                axis=None,
-                keepdims=False, name=None
-                )
-    return (x - min_value) / (max_value - min_value + 1e-3)
+    idx = []
+    for ii in np.arange(shape[0]):
+        if (ii % shape[0]**0.5) == 0:
+            idx.append(ii)
+    idx = np.array(idx)
+    return idx
 
 def get_dataset(
     file_pattern,
@@ -178,9 +150,9 @@ def get_dataset(
     def _ss(x, y):
         x, y = structural_slice(x, y, plane, n)
         return (x, y)
-
+    
     ds = ds.map(_ss, num_parallel_calls)
-
+    
     #     def _f(x, y):
     #         x = to_blocks(x, block_shape)
     #         n_blocks = x.shape[0]
@@ -195,11 +167,13 @@ def get_dataset(
     # ds = ds.map(lambda x, y: (tf.expand_dims(x, -1), y))
 
     ds = ds.prefetch(buffer_size=batch_size)
+    
     def reshape(x,y):
         if plane == "combined":
             for _ in 3:
                 pass
         return (x, y)
+    
     if batch_size is not None:
         ds = ds.batch(batch_size=batch_size, drop_remainder=True)
         # ds = ds.map(lambda x,y: (tf.reshape(x, ((3, batch_size*n,) if plane == "combined" else (batch_size*n,)) + volume_shape[:2] +(1,)),
@@ -230,6 +204,7 @@ def structural_slice(x, y, plane, n=4):
 
     options = ["axial", "coronal", "sagittal", "combined"]
     shape = np.array(x.shape)
+<<<<<<< HEAD
 
     x = clip(x)
     x = normalize(x)
@@ -238,16 +213,30 @@ def structural_slice(x, y, plane, n=4):
     if isinstance(plane, str) and plane in options:
         if plane == "axial":
             idx = np.random.randint(shape[0]**0.5)
+=======
+    mean_idx = _magic_slicing_(shape)
+    if isinstance(plane, str) and plane in options:
+        if plane == "axial":
+            idx = np.random.randint(int(shape[0]**0.5))
+>>>>>>> 5afa5b7e9f5889b53a6699ecbad39d2aae3b12c3
             x = x
-            k = 3
+            k = 1
 
         if plane == "coronal":
+<<<<<<< HEAD
             idx = np.random.randint(shape[1]**0.5)
+=======
+            idx = np.random.randint(int(shape[1]**0.5))
+>>>>>>> 5afa5b7e9f5889b53a6699ecbad39d2aae3b12c3
             x = tf.transpose(x, perm=[1, 2, 0])
             k = 2
 
         if plane == "sagittal":
+<<<<<<< HEAD
             idx = np.random.randint(shape[2]**0.5)
+=======
+            idx = np.random.randint(int(shape[2]**0.5))
+>>>>>>> 5afa5b7e9f5889b53a6699ecbad39d2aae3b12c3
             x = tf.transpose(x, perm=[2, 0, 1])
             k = 1
 
@@ -256,8 +245,10 @@ def structural_slice(x, y, plane, n=4):
             for op in options[:-1]:
                 temp[op] = structural_slice(x, y, op, n)[0]
             x = temp
+            print("X: ", x)
 
         if not plane == "combined":
+<<<<<<< HEAD
             x = tf.squeeze(tf.gather_nd(x, sampler(n).reshape(n, 1, 1)), axis=1)
             x = tf.mean(x, axis=0)
             x = tf.convert_to_tensor(tf.expand_dims(x[idx], axis=-1))
@@ -267,7 +258,19 @@ def structural_slice(x, y, plane, n=4):
 
         # y = tf.repeat(y, n)
 
+=======
+            # select an single slice from each grid (8x8 grid, random idx)
+            x = tf.squeeze(tf.gather_nd(x, (mean_idx + idx).reshape(int(shape[0]**0.5), 1, 1)), axis=1)
+            # get the mean slice
+            x = tf.math.reduce_mean(x, axis=0)
+            x = tf.convert_to_tensor(tf.expand_dims(x, axis=-1))
+            # NEED EXPLANATION HERE? WHY ROTATE?
+            x =  tf.image.rot90(
+                   x, k, name=None
+                )
+>>>>>>> 5afa5b7e9f5889b53a6699ecbad39d2aae3b12c3
         return x, y
+    
     else:
         raise ValueError("expected plane to be one of ['axial', 'coronal', 'sagittal']")
 
@@ -279,7 +282,7 @@ if __name__ == "__main__":
     global_batch_size = 8
     volume_shape = (64, 64, 64)
     ds = get_dataset(
-        ROOTDIR + "tfrecords_no_ds001985/tfrecords_fold_1/data-train_*",
+        ROOTDIR + "tfrecords/tfrecords_fold_1/data-train_*",
         n_classes=n_classes,
         batch_size=global_batch_size,
         volume_shape=volume_shape,
@@ -292,7 +295,7 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
 
     print(ds)
-    for ii in range(100):
+    for ii in range(20):
         x,y=next(ds.as_numpy_iterator())
         # print (np.min(x), np.max(x), np.unique(y))
         count = 1
