@@ -1,7 +1,9 @@
 import nobrainer
 from nobrainer.io import _is_gzipped
 from nobrainer.volume import to_blocks
-from ..helpers.utils import load_vol
+import sys
+sys.path.append('..')
+from helpers.utils import load_vol
 import tensorflow_probability as tfp
 import tensorflow as tf
 import glob
@@ -41,26 +43,6 @@ def apply_augmentations(features, labels):
 
     return
 
-
-
-
-def clip(x, q =90):
-    """
-    """
-    min_val = 0
-    max_val = tfp.stats.percentile(
-                x, q, axis=None,
-                preserve_gradients=False,
-                name=None
-                )
-    x = tf.clip_by_value(
-        x,
-        min_val,
-        max_val,
-        name=None
-        )
-    return x
-
 def _magic_slicing_(shape):
     """
     """
@@ -71,56 +53,6 @@ def _magic_slicing_(shape):
     idx = np.array(idx)
     return idx
 
-
-def standardize(x):
-    """Standard score input tensor.
-    Implements `(x - mean(x)) / stdev(x)`.
-    Parameters
-    ----------
-    x: tensor, values to standardize.
-    Returns
-    -------
-    Tensor of standardized values. Output has mean 0 and standard deviation 1.
-    """
-    x = tf.convert_to_tensor(x)
-    if x.dtype != tf.float32:
-        x = tf.cast(x, tf.float32)
-    median = tfp.stats.percentile(
-                x, 50, axis=None,
-                preserve_gradients=False,
-                name=None
-                )
-    mean, var = tf.nn.moments(x, axes=None)
-    std = tf.sqrt(var)
-    return (x - median) / std
-
-
-def normalize(x):
-    """Standard score input tensor.
-    Implements `(x - mean(x)) / stdev(x)`.
-    Parameters
-    ----------
-    x: tensor, values to standardize.
-    Returns
-    -------
-    Tensor of standardized values. Output has mean 0 and standard deviation 1.
-    """
-    x = tf.convert_to_tensor(x)
-    if x.dtype != tf.float32:
-        x = tf.cast(x, tf.float32)
-
-    max_value = tf.math.reduce_max(
-                x,
-                axis=None,
-                keepdims=False, name=None
-                )
-
-    min_value = tf.math.reduce_min(
-                x,
-                axis=None,
-                keepdims=False, name=None
-                )
-    return (x - min_value) / (max_value - min_value + 1e-3)
 
 def get_dataset(
     file_pattern,
@@ -191,8 +123,6 @@ def get_dataset(
     # This step is necessary because it reduces the extra dimension.
     # ds = ds.unbatch()
 
-    # add a single dimension at the end
-    # ds = ds.map(lambda x, y: (tf.expand_dims(x, -1), y))
 
     ds = ds.prefetch(buffer_size=batch_size)
     def reshape(x,y):
@@ -202,8 +132,6 @@ def get_dataset(
         return (x, y)
     if batch_size is not None:
         ds = ds.batch(batch_size=batch_size, drop_remainder=True)
-        # ds = ds.map(lambda x,y: (tf.reshape(x, ((3, batch_size*n,) if plane == "combined" else (batch_size*n,)) + volume_shape[:2] +(1,)),
-        #                         tf.reshape(y, (batch_size*n,))))
 
     if shuffle_buffer_size:
         ds = ds.shuffle(buffer_size=shuffle_buffer_size)
@@ -230,10 +158,6 @@ def structural_slice(x, y, plane, n=4):
 
     options = ["axial", "coronal", "sagittal", "combined"]
     shape = np.array(x.shape)
-
-    x = clip(x)
-    x = normalize(x)
-    x = standardize(x)
 
     if isinstance(plane, str) and plane in options:
         if plane == "axial":
@@ -279,7 +203,7 @@ if __name__ == "__main__":
     global_batch_size = 8
     volume_shape = (64, 64, 64)
     ds = get_dataset(
-        ROOTDIR + "tfrecords_no_ds001985/tfrecords_fold_1/data-train_*",
+        ROOTDIR + "tfrecords/tfrecords_fold_1/data-train_*",
         n_classes=n_classes,
         batch_size=global_batch_size,
         volume_shape=volume_shape,
