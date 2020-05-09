@@ -12,6 +12,7 @@
 
 
 source ~/.bashrc
-rm -r ~/.Logs
-export CUDA_VISIBLE_DEVICES=0
-python3	-W ignore train.py -jn split-training
+# rm -r ~/.Logs
+# export CUDA_VISIBLE_DEVICES=0
+cd mri-face-detector/examples
+python3	-W ignore train_parallel.py #-jn split-training
