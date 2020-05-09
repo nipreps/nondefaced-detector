@@ -1,6 +1,7 @@
 import nobrainer
 from nobrainer.io import _is_gzipped
 from nobrainer.volume import to_blocks
+from ..helpers.utils import load_vol
 import tensorflow_probability as tfp
 import tensorflow as tf
 import glob
@@ -8,6 +9,12 @@ import numpy as np
 
 AUTOTUNE = tf.data.experimental.AUTOTUNE
 ROOTDIR = '/work/06850/sbansal6/maverick2/mriqc-shared/'
+DISTRIBUTION = load_vol('../helpers/distribution.nii.gz')[0]
+sampler = lambda n: np.array([ np.unravel_index(
+          np.random.choice(np.arange(np.prod(DISTRIBUTION.shape)),
+                                     p = DISTRIBUTION.ravel()),
+          DISTRIBUTION.shape) for _ in range(n)]) 
+
 
 # function to apply augmentations to tf dataset
 def apply_augmentations(features, labels):
@@ -53,6 +60,17 @@ def clip(x, q =90):
         name=None
         )
     return x
+
+def _magic_slicing_(shape):
+    """
+    """
+    idx = []
+    for ii in np.arange(shape[0]):
+        if (ii % shape[0]**0.5) == 0:
+            idx.append(ii)
+    idx = np.array(idx)
+    return idx
+
 
 def standardize(x):
     """Standard score input tensor.
@@ -212,23 +230,24 @@ def structural_slice(x, y, plane, n=4):
 
     options = ["axial", "coronal", "sagittal", "combined"]
     shape = np.array(x.shape)
+
     x = clip(x)
     x = normalize(x)
     x = standardize(x)
 
     if isinstance(plane, str) and plane in options:
         if plane == "axial":
-            idx = np.random.randint(2*shape[0]//5, 3*shape[0]//5)
+            idx = np.random.randint(shape[0]**0.5)
             x = x
             k = 3
 
         if plane == "coronal":
-            idx = np.random.randint(2*shape[1]//4, 3*shape[1]//4)
+            idx = np.random.randint(shape[1]**0.5)
             x = tf.transpose(x, perm=[1, 2, 0])
             k = 2
 
         if plane == "sagittal":
-            idx = np.random.randint(shape[2]//3, 2*shape[2]//3)
+            idx = np.random.randint(shape[2]**0.5)
             x = tf.transpose(x, perm=[2, 0, 1])
             k = 1
 
@@ -239,11 +258,13 @@ def structural_slice(x, y, plane, n=4):
             x = temp
 
         if not plane == "combined":
-            # x = tf.squeeze(tf.gather_nd(x, idx.reshape(n, 1, 1)), axis=1)
-            # x =  tf.image.rot90(
-            #        x, k, name=None
-            #     )
+            x = tf.squeeze(tf.gather_nd(x, sampler(n).reshape(n, 1, 1)), axis=1)
+            x = tf.mean(x, axis=0)
             x = tf.convert_to_tensor(tf.expand_dims(x[idx], axis=-1))
+            x =  tf.image.rot90(
+                   x, k, name=None
+                )
+
         # y = tf.repeat(y, n)
 
         return x, y

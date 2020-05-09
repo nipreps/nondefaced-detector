@@ -11,8 +11,8 @@ from glob import glob
 import matplotlib.pyplot as plt
 
 
-orig_data_face   = '../sample_vols/faced'
-orig_data_face_mask = '../sample_vols/faced'
+orig_data_face   = '../sample_vols/defaced'
+orig_data_face_mask = '../sample_vols/defaced'
 
 save_preprocessing_face   = '../sample_vols/faced/preprocessing'
 save_conformed_face   = '../sample_vols/faced/conformed'
@@ -50,20 +50,27 @@ def preprocess(pth, mask_path=None, debug=False):
 
         plt.show()
         
-        """
+    def _magic_slices(data):
+        idx = []
+        for ii in np.arange(data.shape[0]):
+            if ii % data.shape[0]**0.5 == 0:
+                idx.append(ii)
+        idx = np.array(idx)
+        slice_ = np.random.randint(0, 8) 
         plt.subplot(1, 3, 1)
-        plt.imshow(np.rot90(np.mean(data, axis=0)))
+        plt.imshow(np.rot90(np.mean(data[idx+slice_], axis=0)))
         plt.subplot(1, 3, 2)
-        plt.imshow(np.rot90(np.mean(data, axis=1)))
+        plt.imshow(np.rot90(np.mean(data[:, idx+slice_, :], axis=1)))
         plt.subplot(1, 3, 3)
-        plt.imshow(np.rot90(np.mean(data, axis=2)))
+        plt.imshow(np.rot90(np.mean(data[:, :, idx+slice_], axis=2)))
         plt.show()
-        """
+        
     conform_data(save_preprocessing_path, 
                  out_file=save_conformed_path, 
                  out_size=conform_size, 
                  out_zooms=conform_zoom)
 
+    # for _ in range(10): _magic_slices(load_vol(save_conformed_path)[0])
     if debug: _plot(load_vol(save_conformed_path)[0])
     
     if mask_path:
