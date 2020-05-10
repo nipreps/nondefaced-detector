@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 
 
 orig_data_mask   = '/work/01329/poldrack/data/mriqc-net/data/masks'
+orig_data_faced   = '/work/06850/sbansal6/maverick2/mriqc-shared/conformed/face'
 save_conformed_mask = '/work/06850/sbansal6/maverick2/mriqc-shared/masks/conformed'
 saveprob_distribution = '../defacing/helpers/distribution.nii.gz'
 
@@ -32,16 +33,24 @@ for path in glob(orig_data_mask+'/*/*.nii.gz'):
     try:
         conform_path = os.path.join(save_conformed_mask, dataset)
         mask_path = glob(os.path.join(orig_data_mask, dataset, filename.split('.')[0] + "*_mask*"))[0]
+        volume_path = os.path.join(orig_data_faced, dataset, filename)
     except: continue
     os.makedirs(conform_path, exist_ok=True)   
-    print(mask_path)
+    print(mask_path, volume_path)
     conform_data(mask_path, 
                  out_file=os.path.join(conform_path,filename), 
                  out_size=conform_size, 
                  out_zooms=conform_zoom,
                  order=0)
     print("conform")
-    conformed_mask = 1 - load_vol(os.path.join(conform_path, filename))[0]
+    volume = load_vol(volume_path)[0]
+    volume = normalize(volume)
+
+    # thresholding
+    volume[volume>0.1] = 1; volume[volume<=0.1] = 0
+    mask = load_vol(os.path.join(conform_path, filename))[0]
+    conformed_mask = np.zeros_like(mask)
+    conformed_mask[(volume==1)*(mask==0)] = 1
     normalization += 1
     probability_distribution += conformed_mask*1.
     print (path, np.min(probability_distribution), np.max(probability_distribution))
