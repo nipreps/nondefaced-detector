@@ -2,8 +2,10 @@ import os
 import sys
 import time
 import imgaug
+import shutil
 import numpy as np
 from imgaug import augmenters as iaa
+import matplotlib.pyplot as plt
 from ..helpers.utils import save_vol, load_vol
 from ..preprocessing.conform import conform_data
 from ..preprocessing.normalization import clip, standardize, normalize
@@ -28,8 +30,7 @@ class DataGeneratoronFly(object):
         self.nsamples=nsamples
         self.nruns=nruns
         self.save=save
-
-        DISTRIBUTION = load_vol('../helpers/distribution.nii.gz')[0]
+        DISTRIBUTION = load_vol('../defacing/helpers/distribution.nii.gz')[0]
         assert DISTRIBUTION.shape == conform_size, "Invalid conform_size needs to regenerate face distribution"
 
         DISTRIBUTION /= DISTRIBUTION.sum()
@@ -58,7 +59,7 @@ class DataGeneratoronFly(object):
 
         options = ["axial", "coronal", "sagittal", "combined"]
         assert plane in options, "expected plane to be one of ['axial', 'coronal', 'sagittal']"
-        samples = sampler(self.nsamples)
+        samples = self.sampler(self.nsamples)
 
         if plane == "axial":
             midx = samples[:, 0]
@@ -66,44 +67,51 @@ class DataGeneratoronFly(object):
             k = 3
 
         if plane == "coronal":
-            midx = samplers[:, 1]
+            midx = samples[:, 1]
             volume = np.transpose(volume, axes=[1, 2, 0])
             k = 2
 
         if plane == "sagittal":
-            midx = samplers[:, 2]
+            midx = samples[:, 2]
             volume = np.transpose(volume, axes=[2, 0, 1])
             k = 1
 
         if plane == "combined":
-            temp = {}
+            temp = []
             for op in options[:-1]:
-                temp[op] = self._sample_slices(x, op)
-            volumes = temp
+                temp.append(self._sample_slices(volume, op))
+            volume = temp
+            plt.subplot(1, 3, 1)
+            plt.imshow(volume[0][:,:,0])
+            plt.subplot(1, 3, 2)
+            plt.imshow(volume[1][:,:,0])
+            plt.subplot(1, 3, 3)
+            plt.imshow(volume[2][:,:,0])
+            plt.show()
 
         if not plane == "combined":
-            x = np.squeeze(volume[midx,:,:])
-            x = np.mean(volume, axis=0)
-            x = np.rot90(x, k)
-            x = x[..., None]
-        return x
+            volume = np.squeeze(volume[midx,:,:])
+            volume = np.mean(volume, axis=0)
+            volume = np.rot90(volume, k)
+            volume = volume[..., None]
+        return volume
 
 
     def get_data(self, volume):
         # Generate indexes of the batch
-        
         volume = clip(volume, q=90)
         volume = normalize(volume)
         volume = standardize(volume)
         newaffine = np.eye(4)
-        newaffine[:3, 3] = -0.5 * (np.array(out_size) - 1)
-        save_vol('Pre-processing.nii.gz', volume, newaffine)
-        conform_data('Pre-processing.nii.gz',
-                        'Conformed.nii.gz',
+        newaffine[:3, 3] = -0.5 * (np.array(self.conform_size) - 1)
+        os.makedirs('./tmp', exist_ok=True)
+        save_vol('./tmp/Pre-processing.nii.gz', volume, newaffine)
+        conform_data('./tmp/Pre-processing.nii.gz',
+                        './tmp/Conformed.nii.gz',
                         self.conform_size,
                         self.conform_zoom)
 
-        volume = load_vol('Conformed.nii.gz')[0]
+        volume = load_vol('./tmp/Conformed.nii.gz')[0]
 
         if self.transform:
             volume = self._augmentation(volume)
@@ -114,6 +122,5 @@ class DataGeneratoronFly(object):
                                     plane="combined"))
 
         if not self.save: 
-            os.remove('Pre-processing.nii.gz') 
-            os.remove('Conformed.nii.gz') 
+            shutil.rmtree('./tmp')
         return slices
