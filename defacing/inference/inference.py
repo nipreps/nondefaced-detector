@@ -39,7 +39,7 @@ class inferer(object):
 
         self.inference_generator = DataGeneratoronFly(**inference_transform_params)
         self.model = CombinedClassifier(
-            input_shape=(364, 64), dropout=0.4, wts_root=None, trainable=False
+            input_shape=(64, 64), dropout=0.4, wts_root=None, trainable=True
         )
         self.model.load_weights(
             os.path.abspath("../defacing/saved_weights/best-wts.h5")
@@ -50,7 +50,7 @@ class inferer(object):
         vol : can be numpy ndarray or path to volume
         """
         slices = self.inference_generator.get_data(vol)
-        predictions = self.model.predict(X1)
+        predictions = self.model.predict(slices)
 
         if self.mode.lower() == "max_vote":
             predictions = np.round(predictions)

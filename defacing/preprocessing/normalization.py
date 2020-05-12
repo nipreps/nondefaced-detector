@@ -14,7 +14,6 @@ def clip(x, q=90):
         a_min=min_val,
         a_max=max_val
     )
-    
     return x
 
 
