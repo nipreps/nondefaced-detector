@@ -2,81 +2,47 @@ import os
 import sys
 import time
 import imgaug
-from imgaug import augmenters as iaa
-import nibabel as nib
-import SimpleITK as sitk
+import shutil
 import numpy as np
-from .registration import Coregistration
-from ..helpers.utils import *
+from imgaug import augmenters as iaa
+import matplotlib.pyplot as plt
+from ..helpers.utils import save_vol, load_vol
 from ..preprocessing.conform import conform_data
+from ..preprocessing.normalization import clip, standardize, normalize
 
 
 class DataGeneratoronFly(object):
     """
     """
 
-    def __init__(self, image_size=64, nchannels=1, nmontecarlo=8, transform=None):
+    def __init__(self, conform_size=(64, 64, 64),
+                        conform_zoom=(4., 4., 4.), 
+                        nchannels=1, 
+                        nruns=8,
+                        nsamples=20,
+                        save=False, 
+                        transform=None):
 
-        self.image_size = image_size
-        self.nchannels = nchannels
-        self.transform = transform
-        self.nmontecarlo = nmontecarlo
-        self.coreg = Coregistration()
-        fix_path = os.path.abspath("../defacing/helpers/fixed_image.nii.gz")
-        self.fixed_image = load_volume(fix_path)
+        self.conform_size=conform_size
+        self.conform_zoom=conform_zoom
+        self.nchannels=nchannels
+        self.transform=transform
+        self.nsamples=nsamples
+        self.nruns=nruns
+        self.save=save
+        DISTRIBUTION = load_vol('../defacing/helpers/distribution.nii.gz')[0]
+        assert DISTRIBUTION.shape == conform_size, "Invalid conform_size needs to regenerate face distribution"
 
-    def get_data(self, data, all=False):
-        # Generate indexes of the batch
-        # data = self.coreg.register_patient(
-        #    data, self.fixed_image).astype('float64')
-        _, data = conform_data(data)
-        print(data.shape)
-        if all:
-            return self.__data_generation(data, all=all)
+        DISTRIBUTION /= DISTRIBUTION.sum()
+        self.sampler = lambda n: np.array([ np.unravel_index(
+                  np.random.choice(np.arange(np.prod(DISTRIBUTION.shape)),
+                                             p = DISTRIBUTION.ravel()),
+                  DISTRIBUTION.shape) for _ in range(n)]) 
 
-        X1, X2, X3 = self.__data_generation(data)
-        return [X1, X2, X3]
 
-    def _standardize_volume(self, volume, mask=None):
-        """
-                volume: volume which needs to be normalized
-                mask: brain mask, only required if you prefer not to
-                        consider the effect of air in normalization
-        """
-        if mask != None:
-            volume = volume * mask
-
-        mean = np.mean(volume[volume != 0])
-        std = np.std(volume[volume != 0])
-
-        return (volume - mean) / std
-
-    def _normalize_volume(self, volume, mask=None, _type="MinMax"):
-        """
-                volume: volume which needs to be normalized
-                mask: brain mask, only required if you prefer not to
-                        consider the effect of air in normalization
-                _type: {'Max', 'MinMax', 'Sum'}
-        """
-        if mask != None:
-            volume = mask * volume
-        min_vol = np.min(volume)
-        max_vol = np.max(volume)
-        sum_vol = np.sum(volume)
-
-        if _type == "MinMax":
-            return (volume - min_vol) / (max_vol - min_vol)
-        elif _type == "Max":
-            return volume / max_vol
-        elif _type == "Sum":
-            return volume / sum_vol
-        else:
-            raise ValueError(
-                "Invalid _type, allowed values are: {}".format("Max, MinMax, Sum")
-            )
 
     def _augmentation(self, volume):
-        """
+        r"""
                 Augmenters that are safe to apply to masks
                 Some, such as Affine, have settings that make them unsafe, so always
                 test your augmentation on masks
@@ -88,73 +54,73 @@ class DataGeneratoronFly(object):
         assert volume.shape == volume_shape, "Augmentation shouldn't change volume size"
         return volume
 
-    def _resizeVolume(self, volume):
-        """
-                resizes the original volume such that every patch is
-                75% of original volume
 
-                volume: numpy 3d tensor
-        """
-        ratio = 1.0
+    def _sample_slices(self, volume, plane=None):
 
-        orig_size = (
-            int(self.image_size / ratio),
-            int(self.image_size / ratio),
-            int(self.image_size / ratio),
-        )
-        resized_volume = resize_sitk(volume, orig_size)
-        return resized_volume
+        options = ["axial", "coronal", "sagittal", "combined"]
+        assert plane in options, "expected plane to be one of ['axial', 'coronal', 'sagittal']"
+        samples = self.sampler(self.nsamples)
 
-    def _get_random_slices(self, volume):
-        """
-        """
-        dimensions = volume.shape
-        x = np.random.randint(
-            dimensions[0] // 5, 4 * dimensions[0] // 5, self.nmontecarlo
-        )
-        z = np.random.randint(
-            dimensions[1] // 5, 4 * dimensions[1] // 5, self.nmontecarlo
-        )
-        y = np.random.randint(
-            dimensions[2] // 5, 4 * dimensions[2] // 5, self.nmontecarlo
-        )
+        if plane == "axial":
+            midx = samples[:, 0]
+            volume = volume
+            k = 3
 
-        return [
-            volume[x, :, :][..., None],
-            volume[:, y, :].transpose(1, 0, 2)[..., None],
-            volume[:, :, z].transpose(2, 0, 1)[..., None],
-        ]
+        if plane == "coronal":
+            midx = samples[:, 1]
+            volume = np.transpose(volume, axes=[1, 2, 0])
+            k = 2
 
-    def _get_all_slices(self, volume):
-        """
-        """
-        dimensions = volume.shape
-        x = list(range(dimensions[0] // 5, 4 * dimensions[0] // 5))
-        z = list(range(dimensions[1] // 5, 4 * dimensions[1] // 5))
-        y = list(range(dimensions[2] // 5, 4 * dimensions[2] // 5))
+        if plane == "sagittal":
+            midx = samples[:, 2]
+            volume = np.transpose(volume, axes=[2, 0, 1])
+            k = 1
 
-        return [
-            volume[x, :, :][..., None],
-            volume[:, y, :].transpose(1, 0, 2)[..., None],
-            volume[:, :, z].transpose(2, 0, 1)[..., None],
-        ]
+        if plane == "combined":
+            temp = []
+            for op in options[:-1]:
+                temp.append(self._sample_slices(volume, op))
+            volume = temp
+            plt.subplot(1, 3, 1)
+            plt.imshow(volume[0][:,:,0])
+            plt.subplot(1, 3, 2)
+            plt.imshow(volume[1][:,:,0])
+            plt.subplot(1, 3, 3)
+            plt.imshow(volume[2][:,:,0])
+            plt.show()
 
-    def __data_generation(self, volume, all=False):
-        """
-        """
+        if not plane == "combined":
+            volume = np.squeeze(volume[midx,:,:])
+            volume = np.mean(volume, axis=0)
+            volume = np.rot90(volume, k)
+            volume = volume[..., None]
+        return volume
 
-        # volume = self._resizeVolume(volume)
-        volume = self._standardize_volume(volume)
-        volume = self._normalize_volume(volume)
+
+    def get_data(self, volume):
+        # Generate indexes of the batch
+        volume = clip(volume, q=90)
+        volume = normalize(volume)
+        volume = standardize(volume)
+        newaffine = np.eye(4)
+        newaffine[:3, 3] = -0.5 * (np.array(self.conform_size) - 1)
+        os.makedirs('./tmp', exist_ok=True)
+        save_vol('./tmp/Pre-processing.nii.gz', volume, newaffine)
+        conform_data('./tmp/Pre-processing.nii.gz',
+                        './tmp/Conformed.nii.gz',
+                        self.conform_size,
+                        self.conform_zoom)
+
+        volume = load_vol('./tmp/Conformed.nii.gz')[0]
 
         if self.transform:
             volume = self._augmentation(volume)
 
-        if all:
-            return self._get_all_slices(volume)
+        slices = []
+        for _ in range(self.nruns):
+            slices.append(self._sample_slices(volume, 
+                                    plane="combined"))
 
-        X1 = self._get_random_slices(volume)
-        X2 = self._get_random_slices(volume)
-        X3 = self._get_random_slices(volume)
-
-        return X1, X2, X3
+        if not self.save: 
+            shutil.rmtree('./tmp')
+        return slices

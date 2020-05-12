@@ -55,7 +55,7 @@ def Submodel(
     dropout=0.4,
     name="axial",
     weights="axial",
-    include_top="True",
+    include_top=True,
     root_path=None,
     trainable=True,
 ):
