@@ -1,10 +1,10 @@
 import sys
 sys.path.append('..')
-from defacing.helpers.utils import load_volume
+from defacing.helpers.utils import load_vol
 from defacing.inference import inferer
 
-_inferer = inferer(threshold=0.7)
-path = '../sample_vols/faced/example2.nii.gz'
-# vol = load_volume(path)
-label, conf = _inferer.infer(path)
+_inferer = inferer()
+path = '../sample_vols/faced/example4.nii.gz'
+vol, _, _ = load_vol(path)
+label, conf = _inferer.infer(vol)
 
