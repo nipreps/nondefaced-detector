@@ -52,7 +52,7 @@ for path in glob(orig_data_mask+'/*/*.nii.gz'):
     conformed_mask = np.zeros_like(mask)
     conformed_mask[(volume==1)*(mask==0)] = 1
     normalization += 1
-    probability_distribution += conformed_mask*1.
+    probability_distribution += mask*1.
     print (path, np.min(probability_distribution), np.max(probability_distribution))
     # except: pass
 

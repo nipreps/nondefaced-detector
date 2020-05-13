@@ -4,7 +4,7 @@ import glob
 import random
 import time
 import nibabel as nib
-import SimpleITK as sitk
+
 import numpy as np
 import matplotlib.pyplot as plt
 from tensorflow.keras import backend as K
@@ -51,51 +51,6 @@ def load_vol(load_path):
     vol_affine = nib_vol.affine
 
     return np.array(vol_data), vol_affine, vol_data.shape
-
-
-def load_volume(load_path):
-    return sitk.ReadImage(load_path, sitk.sitkFloat32)
-
-
-def resize_sitk(original_volume, outputSize=None, interpolator=sitk.sitkLinear):
-    """
-                    Resample 3D images Image:
-                    For Labels use nearest neighbour interpolation
-                    For image can use any: 
-                            sitkNearestNeighbor = 1,
-                            sitkLinear = 2,
-                    sitkBSpline = 3,
-                            sitkGaussian = 4,
-                            sitkLabelGaussian = 5, 
-    """
-    volume = sitk.GetImageFromArray(original_volume)
-    inputSize = volume.GetSize()
-    inputSpacing = volume.GetSpacing()
-    outputSpacing = [1.0, 1.0, 1.0]
-
-    if outputSize:
-        # based on provided information and aspect ratio of the
-        # original volume
-        outputSpacing[0] = inputSpacing[0] * (inputSize[0] / outputSize[0])
-        outputSpacing[1] = inputSpacing[1] * (inputSize[1] / outputSize[1])
-        outputSpacing[2] = inputSpacing[2] * (inputSize[2] / outputSize[2])
-    else:
-        # If No outputSize is specified then resample to 1mm spacing
-        outputSize = [0.0, 0.0, 0.0]
-        outputSize[0] = int(inputSize[0] * inputSpacing[0] / outputSpacing[0] + 0.5)
-        outputSize[1] = int(inputSize[1] * inputSpacing[1] / outputSpacing[1] + 0.5)
-        outputSize[2] = int(inputSize[2] * inputSpacing[2] / outputSpacing[2] + 0.5)
-
-    resampler = sitk.ResampleImageFilter()
-    resampler.SetSize(outputSize)
-    resampler.SetOutputSpacing(outputSpacing)
-    resampler.SetOutputOrigin(volume.GetOrigin())
-    resampler.SetOutputDirection(volume.GetDirection())
-    resampler.SetInterpolator(interpolator)
-    resampler.SetDefaultPixelValue(0)
-    volume = resampler.Execute(volume)
-    resampled_volume = sitk.GetArrayFromImage(volume)
-    return resampled_volume
 
 
 def grid_to_single(image_batch, label_image=False):
