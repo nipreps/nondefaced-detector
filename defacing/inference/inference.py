@@ -11,7 +11,7 @@ from ..dataloaders.inference_dataloader import DataGeneratoronFly
 
 
 class inferer(object):
-    r"""
+    """
        nMontecarlo: for multiple exp for same model
        quick: checks for all 3 fold models
        mode: method to merge predictions
@@ -46,7 +46,7 @@ class inferer(object):
         )
 
     def infer(self, vol):
-        r"""
+        """
         vol : can be numpy ndarray or path to volume
         """
         slices = self.inference_generator.get_data(vol)
