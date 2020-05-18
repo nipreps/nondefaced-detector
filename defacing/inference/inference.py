@@ -9,9 +9,11 @@ from tensorflow.keras.models import load_model
 from ..models.modelN import CombinedClassifier
 from ..dataloaders.inference_dataloader import DataGeneratoronFly
 
+ROOTDIR = "/work/06850/sbansal6/maverick2/mriqc-shared/"
+
 
 class inferer(object):
-    r"""
+    """
        nMontecarlo: for multiple exp for same model
        quick: checks for all 3 fold models
        mode: method to merge predictions
@@ -42,15 +44,23 @@ class inferer(object):
             input_shape=(64, 64), dropout=0.4, wts_root=None, trainable=True
         )
         self.model.load_weights(
-            os.path.abspath("../defacing/saved_weights/best-wts.h5")
+
+            os.path.abspath(os.path.join(ROOTDIR, "model_save_dir_final/weights/combined/best-wts.h5"))
         )
 
     def infer(self, vol):
-        r"""
+        """
         vol : can be numpy ndarray or path to volume
         """
         slices = self.inference_generator.get_data(vol)
-        predictions = self.model.predict(slices)
+        
+        slices = np.transpose(np.array(slices),axes=[1, 0, 2, 3, 4])
+        ds = {}
+        ds['axial'] = slices[0]
+        ds['coronal'] = slices[1]
+        ds['sagittal'] = slices[2]
+    
+        predictions = self.model.predict(ds)
 
         if self.mode.lower() == "max_vote":
             predictions = np.round(predictions)
@@ -75,6 +85,9 @@ class inferer(object):
 
         pred_str = "faced" if pred == 1 else "defaced"
         conf = conf if pred == 1 else 1.0 - conf
-
+        
         print("[INFO] Given volume is " + pred_str + " with confidence of: {}".format(conf))
+        
+        del self.model
+        K.clear_session()
         return pred, conf
