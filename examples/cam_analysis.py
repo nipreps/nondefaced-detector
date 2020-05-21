@@ -1,8 +1,8 @@
 import sys, os
 sys.path.append('..')
-from defacing.helpers.utils import load_volume
+from defacing.helpers.utils import load_vol
 from defacing.dataloaders.inference_dataloader import DataGeneratoronFly
-from defacing.models.model import custom_model
+from defacing.models.modelN import Submodel
 
 import numpy as np
 import matplotlib.cm as cm
@@ -17,40 +17,52 @@ import keras.backend as K
 import tensorflow as tf
 
 volume_path = '../sample_vols/faced/example1.nii.gz'
-volume = load_volume(volume_path)
+volume, _, _ = load_vol(volume_path)
 
 
-model_path = '../defacing/saved_weights/best_cv2.h5'
-model = custom_model(input_shape = (64,64), nclasses=2, multiencoders=True)
-"""
-session = K.get_session()
-init = tf.global_variables_initializer()
-session.run(init)
-"""
-model.load_weights(model_path, by_name=True)
+root_path = '/home/pi/weights/'
+weights = 'axial'
+model = Submodel(input_shape=(64, 64),
+                name=weights,
+                weights=weights,
+                include_top=True,
+                root_path=root_path,
+                trainable=False)
+
+
 
 print (model.summary())
-dataloader_params = {'image_size': 64, 'nchannels': 1, 'nmontecarlo':1, 'transform':None}
+dataloader_params = {
+            "conform_size": (64, 64, 64),
+            "conform_zoom": (4., 4., 4.), 
+            "nchannels": 1, 
+            "nruns": 8,
+            "nsamples": 20,
+            "save": False, 
+            "transform": None
+        }
 datagenerator = DataGeneratoronFly(**dataloader_params)
-X1, _, _ = datagenerator.get_data(volume)
-X2 = np.array(X1[1])
-print (X2.shape)
-score = np.squeeze(model.predict(X2))
+slices = datagenerator.get_data(volume)
+slices = np.transpose(np.array(slices),axes=[1, 0, 2, 3, 4])
+ds = {}
+ds['axial'] = slices[0]
+ds['coronal'] = slices[1]
+ds['sagittal'] = slices[2]
+
+score = np.squeeze(model.predict(ds[weights]))
 print(score)
 save_path = '../cam_results'
 
-    
-if save_path:
-    os.makedirs(save_path, exist_ok=True)
-    plt.figure(figsize=(10, 10))
-    gs = gridspec.GridSpec(1, 1)
-    gs.update(wspace=0.025, hspace=0.05)
+os.makedirs(save_path, exist_ok=True)
+plt.figure(figsize=(10, 10))
+gs = gridspec.GridSpec(1, 1)
+gs.update(wspace=0.025, hspace=0.05)
 
-grads_ = visualize_cam(model, -1, filter_indices=0, penultimate_layer_idx = 0, 
-                       seed_input = X2)
+grads_ =visualize_cam(model, 0, 1, ds[weights], 
+                      penultimate_layer_idx = -1)
 grads_ = np.array(grads_)
 ax = plt.subplot(gs[0,0])
-im = ax.imshow(np.rot90(np.squeeze(X2)), cmap='gray')
+im = ax.imshow(np.rot90(np.squeeze(ds[weights])), cmap='gray')
 im = ax.imshow(np.rot90(grads_), alpha=1, cmap='jet')
 ax.set_xticklabels([])
 ax.set_yticklabels([])
