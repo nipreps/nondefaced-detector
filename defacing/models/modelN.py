@@ -8,17 +8,12 @@ from tensorflow.keras import regularizers
 import tensorflow.keras.backend as K
 
 
-def relu6(x):
-    """Custom activation using relu6"""
-    return K.relu(x, max_value=6)
-
-
 def ConvBNrelu(x, filters=32, kernel=3, strides=1, padding="same"):
     """
     """
     x = layers.Conv2D(filters, kernel, strides=strides, padding=padding)(x)
     x = layers.BatchNormalization()(x)
-    x = layers.Activation(relu6)(x)
+    x = layers.Activation('relu')(x)
     return x
 
 

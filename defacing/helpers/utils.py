@@ -4,6 +4,7 @@ import glob
 import random
 import time
 import nibabel as nib
+import binascii
 
 import numpy as np
 import matplotlib.pyplot as plt

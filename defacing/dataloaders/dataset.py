@@ -13,37 +13,51 @@ AUTOTUNE = tf.data.experimental.AUTOTUNE
 ROOTDIR = '/work/06850/sbansal6/maverick2/mriqc-shared/'
 DISTRIBUTION = load_vol('../helpers/distribution.nii.gz')[0]
 DISTRIBUTION /= DISTRIBUTION.sum()
+COM = np.unravel_index(int(np.sum(DISTRIBUTION.ravel()*np.arange(len(DISTRIBUTION.ravel())))/np.sum(DISTRIBUTION.ravel())), DISTRIBUTION.shape)
 
-sampler = lambda n: np.array([ np.unravel_index(
-          np.random.choice(np.arange(np.prod(DISTRIBUTION.shape)),
-                                     p = DISTRIBUTION.ravel()),
-          DISTRIBUTION.shape) for _ in range(n)]) 
+
+# sampling from augmented distribution is same as augmenting the sampled points
+# augmenting distribution at every iteration is expensive, so this way
+sampler = lambda n, threshold = 0.1: np.array([ np.unravel_index(
+          np.random.choice(np.arange(np.prod(distribution.shape)),
+                                     p = distribution.ravel()),
+          distribution.shape) (+1 if np.random.randn() > 0.5 else -1)*np.random.randint(0, 
+                                        int(DISTRIBUTION.shape[0]*threshold + 1), 3) for _ in range(n)]) 
 
 
 # function to apply augmentations to tf dataset
-def apply_augmentations(features, labels):
+def apply_augmentations(x):
 
     """ Apply <TYPE_OF> augmentation to the dataset
 
     """
-    #     iaa.SomeOf(
-    #             (0, 3),
-    #             [
-    #                 iaa.Fliplr(0.5),
-    #                 iaa.Flipud(0.5),
-    #                 iaa.Noop(),
-    #                 iaa.OneOf(
-    #                     [
-    #                         iaa.Affine(rotate=90),
-    #                         iaa.Affine(rotate=180),
-    #                         iaa.Affine(rotate=270),
-    #                     ]
-    #                 ),
-    #                 # iaa.GaussianBlur(sigma=(0.0, 0.2)),
-    #             ],
-    #         )
+    p = np.random.uniform(0, 1, 1)
+    if p < 0.33:
+        # rotate 90
+        x =  tf.image.rot90(
+                   x, 1, name=None
+                )
+    elif p < 0.66:
+        x =  tf.image.rot90(
+                   x, 2, name=None
+                )
+    else:
+        x =  tf.image.rot90(
+                   x, 3, name=None
+                )
 
-    return
+    x = tf.keras.preprocessing.image.random_zoom(
+                x, 0.2, 
+                row_axis=1, 
+                col_axis=2, 
+                channel_axis=0, 
+                fill_mode='nearest',
+                cval=0.0, 
+                interpolation_order=2
+            )
+
+    return x
+
 
 def _magic_slicing_(shape):
     """
@@ -99,18 +113,18 @@ def get_dataset(
         num_parallel_calls=num_parallel_calls,
     )
 
-    if augment:
-        ds = ds.map(
-            lambda x, y: tf.cond(
-                tf.random.uniform((1,)) > 0.5,
-                true_fn=lambda: apply_augmentations(x, y),
-                false_fn=lambda: (x, y),
-            ),
-            num_parallel_calls=num_parallel_calls,
-        )
+    # if augment:
+    #     ds = ds.map(
+    #         lambda x, y: tf.cond(
+    #             tf.random.uniform((1,)) > 0.5,
+    #             true_fn=lambda: apply_augmentations(x, y),
+    #             false_fn=lambda: (x, y),
+    #         ),
+    #         num_parallel_calls=num_parallel_calls,
+    #     )
 
     def _ss(x, y):
-        x, y = structural_slice(x, y, plane, n)
+        x, y = structural_slice(x, y, plane, n, augment)
         return (x, y)
 
     ds = ds.map(_ss, num_parallel_calls)
@@ -144,7 +158,7 @@ def get_dataset(
     return ds
 
 
-def structural_slice(x, y, plane, n=4):
+def structural_slice(x, y, plane, n=4, augment= False):
 
     """ Transpose dataset based on the plane
 
@@ -155,47 +169,52 @@ def structural_slice(x, y, plane, n=4):
     y:
 
     plane:
+    
+    n:
 
+    augment:
     """
 
+    threshold = 0.1 if augment else 0.0 
     options = ["axial", "coronal", "sagittal", "combined"]
     shape = np.array(x.shape)
 
     if isinstance(plane, str) and plane in options:
         if plane == "axial":
             idx = np.random.randint(shape[0]**0.5)
-            midx = sampler(n)[:, 0]
+            midx = sampler(n, threshold)[:, 0]
             x = x
             k = 3
 
         if plane == "coronal":
             idx = np.random.randint(shape[1]**0.5)
-            midx = sampler(n)[:, 1]
+            midx = sampler(n, threshold)[:, 1]
             x = tf.transpose(x, perm=[1, 2, 0])
             k = 2
 
         if plane == "sagittal":
             idx = np.random.randint(shape[2]**0.5)
-            midx = sampler(n)[:, 2]
+            midx = sampler(n, threshold)[:, 2]
             x = tf.transpose(x, perm=[2, 0, 1])
             k = 1
 
         if plane == "combined":
             temp = {}
             for op in options[:-1]:
-                temp[op] = structural_slice(x, y, op, n)[0]
+                temp[op] = structural_slice(x, y, op, n, augment)[0]
             x = temp
 
         if not plane == "combined":
             x = tf.squeeze(tf.gather_nd(x, midx.reshape(n, 1, 1)), axis=1)
             x = tf.math.reduce_mean(x, axis=0)
-            x = tf.convert_to_tensor(tf.expand_dims(x, axis=-1))
-            x =  tf.image.rot90(
-                   x, k, name=None
-                )
+            x = tf.expand_dims(x, axis=-1)
 
-        # y = tf.repeat(y, n)
-
+            if augment:
+                if np.random.uniform() > 0.3: 
+                    # applies augmentation for 70% of the times
+                    x = apply_augmentations(x)
+                
+            x = tf.convert_to_tensor(x)
         return x, y
     else:
         raise ValueError("expected plane to be one of ['axial', 'coronal', 'sagittal']")

@@ -81,13 +81,6 @@ class DataGeneratoronFly(object):
             for op in options[:-1]:
                 temp.append(self._sample_slices(volume, op))
             volume = temp
-            plt.subplot(1, 3, 1)
-            plt.imshow(volume[0][:,:,0])
-            plt.subplot(1, 3, 2)
-            plt.imshow(volume[1][:,:,0])
-            plt.subplot(1, 3, 3)
-            plt.imshow(volume[2][:,:,0])
-            plt.show()
 
         if not plane == "combined":
             volume = np.squeeze(volume[midx,:,:])
