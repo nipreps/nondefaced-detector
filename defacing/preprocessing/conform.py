@@ -31,6 +31,7 @@ def conform_data(in_file, out_file=None, out_size=(256, 256, 256), out_zooms=(1.
         indexing="ij")
     ).reshape((3, -1))
     offset = 0.5 * (np.max(new_ijk, axis=1) - np.array(in_file.shape))
+    print (offset)
     # Align the centers of the two sampling extents
     new_ijk -= offset[:, np.newaxis]
 

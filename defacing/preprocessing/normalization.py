@@ -3,6 +3,9 @@ import numpy as np
 
 def clip(x, q=90):
     
+    
+    x = np.nan_to_num(x)
+    
     min_val = 0
     max_val = np.percentile(
         x, q,
