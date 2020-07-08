@@ -2,16 +2,15 @@ import nobrainer
 from nobrainer.io import _is_gzipped
 from nobrainer.volume import to_blocks
 import sys
-sys.path.append('..')
-from helpers.utils import load_vol
+from ..helpers.utils import load_vol
 import tensorflow_probability as tfp
 import tensorflow as tf
 import glob
 import numpy as np
 
 AUTOTUNE = tf.data.experimental.AUTOTUNE
-ROOTDIR = '/work/06850/sbansal6/maverick2/mriqc-shared/'
-DISTRIBUTION = load_vol('../helpers/distribution.nii.gz')[0]
+ROOTDIR = '/work/06850/sbansal6/maverick2/mriqc-shared/experiment_faced_defaced/'
+DISTRIBUTION = load_vol('../defacing/helpers/distribution.nii.gz')[0]
 DISTRIBUTION /= DISTRIBUTION.sum()
 COM = np.unravel_index(int(np.sum(DISTRIBUTION.ravel()*np.arange(len(DISTRIBUTION.ravel())))/np.sum(DISTRIBUTION.ravel())), DISTRIBUTION.shape)
 
@@ -25,36 +24,46 @@ sampler = lambda n, threshold = 0.1: np.array([ np.unravel_index(
                                         int(DISTRIBUTION.shape[0]*threshold) + 1, 3) for _ in range(n)]) 
 
 
+def zoom(x, shape=(64, 64)):
+    """Zoom augmentation
+
+    Args:
+        x: Image
+
+    Returns:
+        Augmented image
+    """
+    scales = list(np.arange(0.8, 1.0, 0.01))
+    boxes = np.zeros((len(scales), 4))
+
+    for i, scale in enumerate(scales):
+        x1 = y1 = 0.5 - (0.5 * scale)
+        x2 = y2 = 0.5 + (0.5 * scale)
+        boxes[i] = [x1, y1, x2, y2]
+
+    def random_crop(img):
+        crops = tf.image.crop_and_resize([img], boxes=boxes, box_ind=np.zeros(len(scales)), crop_size=shape)
+        return crops[np.random.randint(0, len(scales))]
+
+
+    choice = np.random.uniform(0, 1.0)
+    if choice < 0.5: return lambda: x
+    else: lambda: random_crop(x)
+
+
 # function to apply augmentations to tf dataset
 def apply_augmentations(x):
 
     """ Apply <TYPE_OF> augmentation to the dataset
 
     """
-    p = np.random.uniform(0, 1, 1)
-    if p < 0.33:
-        # rotate 90
-        x =  tf.image.rot90(
-                   x, 1, name=None
-                )
-    elif p < 0.66:
-        x =  tf.image.rot90(
-                   x, 2, name=None
-                )
-    else:
-        x =  tf.image.rot90(
-                   x, 3, name=None
-                )
-
-    x = tf.keras.preprocessing.image.random_zoom(
-                x, 0.2, 
-                row_axis=1, 
-                col_axis=2, 
-                channel_axis=0, 
-                fill_mode='nearest',
-                cval=0.0, 
-                interpolation_order=2
-            )
+    x = tf.image.rot90(x, np.random.randint(0, 4))
+    
+    
+    x = tf.image.random_flip_left_right(x)
+    x = tf.image.random_flip_up_down(x)
+    
+    x = zoom(x)
 
     return x
 
@@ -232,6 +241,7 @@ if __name__ == "__main__":
         batch_size=global_batch_size,
         volume_shape=volume_shape,
         plane="combined",
+        augment = True,
         shuffle_buffer_size=3,
     )
 
