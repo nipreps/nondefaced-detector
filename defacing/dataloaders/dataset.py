@@ -19,10 +19,10 @@ COM = np.unravel_index(int(np.sum(DISTRIBUTION.ravel()*np.arange(len(DISTRIBUTIO
 # sampling from augmented distribution is same as augmenting the sampled points
 # augmenting distribution at every iteration is expensive, so this way
 sampler = lambda n, threshold = 0.1: np.array([ np.unravel_index(
-          np.random.choice(np.arange(np.prod(distribution.shape)),
-                                     p = distribution.ravel()),
-          distribution.shape) (+1 if np.random.randn() > 0.5 else -1)*np.random.randint(0, 
-                                        int(DISTRIBUTION.shape[0]*threshold + 1), 3) for _ in range(n)]) 
+          np.random.choice(np.arange(np.prod(DISTRIBUTION.shape)),
+                                     p = DISTRIBUTION.ravel()),
+          DISTRIBUTION.shape) + (+1 if np.random.randn() > 0.5 else -1)*np.random.randint(0, 
+                                        int(DISTRIBUTION.shape[0]*threshold) + 1, 3) for _ in range(n)]) 
 
 
 # function to apply augmentations to tf dataset
