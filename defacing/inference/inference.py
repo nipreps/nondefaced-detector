@@ -88,6 +88,6 @@ class inferer(object):
         
         print("[INFO] Given volume is " + pred_str + " with confidence of: {}".format(conf))
         
-        del self.model
-        K.clear_session()
+        # del self.model
+        # K.clear_session()
         return pred, conf
