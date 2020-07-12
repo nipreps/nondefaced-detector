@@ -48,7 +48,7 @@ def zoom(x, shape=(64, 64)):
 
     choice = np.random.uniform(0, 1.0)
     if choice < 0.5: return lambda: x
-    else: lambda: random_crop(x)
+    else: return lambda: random_crop(x)
 
 
 # function to apply augmentations to tf dataset
