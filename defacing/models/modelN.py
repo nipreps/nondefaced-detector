@@ -77,7 +77,11 @@ def Submodel(
 
 
 def CombinedClassifier(
-    input_shape=(32, 32), dropout=0.4, wts_root=None, trainable=False
+    input_shape=(32, 32), 
+    dropout=0.4, 
+    wts_root=None, 
+    trainable=False,
+    shared=False
 ):
     """
     """
@@ -90,37 +94,55 @@ def CombinedClassifier(
         include_top=False,
         root_path=wts_root,
     )
-    sagittal_features = Submodel(
-        input_shape,
-        dropout,
-        name="sagittal",
-        weights=None,
-        include_top=False,
-        root_path=wts_root,
-    )
-    coronal_features = Submodel(
-        input_shape,
-        dropout,
-        name="coronal",
-        weights=None,
-        include_top=False,
-        root_path=wts_root,
-    )
 
-    merge_features = [
-        axial_features.outputs[0],
-        sagittal_features.outputs[0],
-        coronal_features.outputs[0],
-    ]
+    if not shared:
+        sagittal_features = Submodel(
+            input_shape,
+            dropout,
+            name="sagittal",
+            weights=None,
+            include_top=False,
+            root_path=wts_root,
+        )
+        coronal_features = Submodel(
+            input_shape,
+            dropout,
+            name="coronal",
+            weights=None,
+            include_top=False,
+            root_path=wts_root,
+        )
+
+        input_features = [
+            axial_features.inputs,
+            coronal_features.inputs,
+            sagittal_features.inputs,
+        ]
+
+        merge_features = [
+            axial_features.outputs[0],
+            sagittal_features.outputs[0],
+            coronal_features.outputs[0],
+        ]
+
+    else:
+
+        p1 = layers.Input(shape=input_shape + (1,), name='plane1')
+        p2 = layers.Input(shape=input_shape + (1,), name='plane2')
+        p3 = layers.Input(shape=input_shape + (1,), name='plane3')
+
+        merge_features = [
+            axial_features(p1),
+            axial_features(p2),
+            axial_features(p3),
+        ]
+        input_features = [p1, p2, p3]
+
     add_features = layers.Add()(merge_features)
     prob = ClassifierHead(add_features, dropout)
 
     model = models.Model(
-        inputs=[
-            axial_features.inputs,
-            coronal_features.inputs,
-            sagittal_features.inputs,
-        ],
+        inputs=input_features,
         outputs=prob,
     )
 
