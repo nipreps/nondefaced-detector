@@ -45,11 +45,11 @@ class VolumeAugmentations(object):
 
         p = np.random.uniform(0, 1)
         if 'noop' in self.augmentations.keys():
-            if p > self.augmentations['noop']:
+            if p < self.augmentations['noop']:
                 return (x, y)
 
         for key in self.augmentations.keys():
-            if p > self.augmentations[key]:
+            if p < self.augmentations[key]:
                 if key.lower() == 'rotation':
                     k = np.random.randint(1, 4)
                     x = tf.image.rot90(x, k)
@@ -83,11 +83,11 @@ class SliceAugmentations(object):
 
         p = np.random.uniform(0, 1)
         if 'noop' in self.augmentations.keys():
-            if p > self.augmentations['noop']:
+            if p < self.augmentations['noop']:
                 return x
 
         for key in self.augmentations.keys():
-            if p > self.augmentations[key]:
+            if p < self.augmentations[key]:
                 if key.lower() == 'rotation':
                     k = np.random.randint(1, 4)
                     x = tf.image.rot90(x, k)
@@ -97,7 +97,7 @@ class SliceAugmentations(object):
 
                 elif key.lower() == 'flipud':
                     x = tf.image.random_flip_up_down(x)
-                    
+
                 elif key.lower() == 'zoom':
                     x = zoom(x, shape = np.asarray(x.shape))
                      
