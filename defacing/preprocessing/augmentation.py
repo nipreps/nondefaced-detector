@@ -99,6 +99,6 @@ class SliceAugmentations(object):
                     x = tf.image.random_flip_up_down(x)
 
                 elif key.lower() == 'zoom':
-                    x = zoom(x, shape = np.asarray(x.shape))
+                    x = zoom(x, shape = np.asarray(x.shape)[-3:-1])
                      
         return x
