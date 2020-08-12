@@ -38,12 +38,17 @@ def train(
     batch_size=8,
     n_classes=2,
     n_epochs=30,
-    fold=1
+    fold=1,
+    shared=False,
 ):
     tpaths = glob.glob(ROOTDIR+"tfrecords/tfrecords_fold_{}/data-train_*".format(fold))
     vpaths = glob.glob(ROOTDIR+"tfrecords/tfrecords_fold_{}/data-valid_*".format(fold))
 
-    planes = ["axial", "coronal", "sagittal", "combined"]
+    if not shared:
+        planes = ["axial", "coronal", "sagittal", "combined"]
+    else:
+        planes = ['combined']
+
 
     strategy = tf.distribute.MirroredStrategy()
     BATCH_SIZE_PER_REPLICA = batch_size
@@ -97,6 +102,7 @@ def train(
                     dropout=dropout,
                     trainable=True,
                     wts_root=cp_save_path,
+                    shared = shared
                 )
 
             print("Submodel: ", plane)
