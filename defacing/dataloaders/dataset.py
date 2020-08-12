@@ -2,6 +2,7 @@ import nobrainer
 from nobrainer.io import _is_gzipped
 from nobrainer.volume import to_blocks
 import sys
+from ..preprocessing.augmentation import VolumeAugmentations, SliceAugmentations
 from ..helpers.utils import load_vol
 import tensorflow_probability as tfp
 import tensorflow as tf
@@ -17,66 +18,25 @@ COM = np.unravel_index(int(np.sum(DISTRIBUTION.ravel()*np.arange(len(DISTRIBUTIO
 
 # sampling from augmented distribution is same as augmenting the sampled points
 # augmenting distribution at every iteration is expensive, so this way
-sampler = lambda n, threshold = 0.1: np.array([ np.unravel_index(
-          np.random.choice(np.arange(np.prod(DISTRIBUTION.shape)),
-                                     p = DISTRIBUTION.ravel()),
-          DISTRIBUTION.shape) + (+1 if np.random.randn() > 0.5 else -1)*np.random.randint(0, 
-                                        int(DISTRIBUTION.shape[0]*threshold) + 1, 3) for _ in range(n)]) 
+sampler = lambda n, distribution = DISTRIBUTION, threshold = 0.1: np.array([ np.unravel_index(
+          np.random.choice(np.arange(np.prod(distribution.shape)),
+                                     p = distribution.ravel()),
+          distribution.shape) + (+1 if np.random.randn() > 0.5 else -1)*np.random.randint(0, 
+                                        int(distribution.shape[0]*threshold) + 1, 3) for _ in range(n)]) 
 
 
-def zoom(x, shape=(64, 64)):
-    """Zoom augmentation
-
-    Args:
-        x: Image
-
-    Returns:
-        Augmented image
-    """
-    scales = list(np.arange(0.8, 1.0, 0.01))
-    boxes = np.zeros((len(scales), 4))
-
-    for i, scale in enumerate(scales):
-        x1 = y1 = 0.5 - (0.5 * scale)
-        x2 = y2 = 0.5 + (0.5 * scale)
-        boxes[i] = [x1, y1, x2, y2]
-
-    def random_crop(img):
-        crops = tf.image.crop_and_resize([img], boxes=boxes, box_ind=np.zeros(len(scales)), crop_size=shape)
-        return crops[np.random.randint(0, len(scales))]
+3daugmentations = {'rotation': 0.5,
+                        'translation': 0.5,
+                        'noop': 0.3}
+augmentvolume = VolumeAugmentations(DISTRIBUTION, 3daugmentations)
 
 
-    choice = np.random.uniform(0, 1.0)
-    if choice < 0.5: return lambda: x
-    else: return lambda: random_crop(x)
-
-
-# function to apply augmentations to tf dataset
-def apply_augmentations(x):
-
-    """ Apply <TYPE_OF> augmentation to the dataset
-
-    """
-    x = tf.image.rot90(x, np.random.randint(0, 4))
-    
-    
-    x = tf.image.random_flip_left_right(x)
-    x = tf.image.random_flip_up_down(x)
-    
-    x = zoom(x)
-
-    return x
-
-
-def _magic_slicing_(shape):
-    """
-    """
-    idx = []
-    for ii in np.arange(shape[0]):
-        if (ii % shape[0]**0.5) == 0:
-            idx.append(ii)
-    idx = np.array(idx)
-    return idx
+2daugmentations = {'rotation': 0.5,
+                    'fliplr': 0.5,
+                    'flipud': 0.5,
+                    'zoom': 0.5,
+                    'noop': 0.3}
+augmentslice = VolumeAugmentations(2daugmentations)
 
 
 def get_dataset(
@@ -102,7 +62,6 @@ def get_dataset(
     file_pattern:
 
     n_classes:
-
     """
 
     files = glob.glob(file_pattern)
@@ -133,7 +92,13 @@ def get_dataset(
     #     )
 
     def _ss(x, y):
-        x, y = structural_slice(x, y, plane, n, augment)
+        if 3daugmentations['noop'] < 1:
+            x, y = augmentvolume(x,y)
+        x, y = structural_slice(x, y, 
+                                plane, 
+                                n, 
+                                augment, 
+                                augmentvolume.distribution)
         return (x, y)
 
     ds = ds.map(_ss, num_parallel_calls)
@@ -150,11 +115,7 @@ def get_dataset(
 
 
     ds = ds.prefetch(buffer_size=batch_size)
-    def reshape(x,y):
-        if plane == "combined":
-            for _ in 3:
-                pass
-        return (x, y)
+
     if batch_size is not None:
         ds = ds.batch(batch_size=batch_size, drop_remainder=True)
 
@@ -167,7 +128,11 @@ def get_dataset(
     return ds
 
 
-def structural_slice(x, y, plane, n=4, augment= False):
+def structural_slice(x, y, 
+                plane, 
+                n = 4, 
+                augment = False, 
+                distribution = DISTRIBUTION):
 
     """ Transpose dataset based on the plane
 
@@ -189,44 +154,50 @@ def structural_slice(x, y, plane, n=4, augment= False):
     shape = np.array(x.shape)
 
     if isinstance(plane, str) and plane in options:
+        idxs = sampler(n, 
+                        distribution, 
+                        threshold)
+
         if plane == "axial":
             idx = np.random.randint(shape[0]**0.5)
-            midx = sampler(n, threshold)[:, 0]
+            midx = idxs[:, 0]
             x = x
-            k = 3
 
         if plane == "coronal":
             idx = np.random.randint(shape[1]**0.5)
-            midx = sampler(n, threshold)[:, 1]
+            midx = idxs[:, 1]
             x = tf.transpose(x, perm=[1, 2, 0])
-            k = 2
+
 
         if plane == "sagittal":
             idx = np.random.randint(shape[2]**0.5)
-            midx = sampler(n, threshold)[:, 2]
+            midx = idxs[:, 2]
             x = tf.transpose(x, perm=[2, 0, 1])
-            k = 1
+
 
         if plane == "combined":
             temp = {}
             for op in options[:-1]:
-                temp[op] = structural_slice(x, y, op, n, augment)[0]
+                temp[op] = structural_slice(x, y, 
+                                            op, 
+                                            n, 
+                                            augment, 
+                                            distribution)[0]
             x = temp
 
         if not plane == "combined":
             x = tf.squeeze(tf.gather_nd(x, midx.reshape(n, 1, 1)), axis=1)
             x = tf.math.reduce_mean(x, axis=0)
             x = tf.expand_dims(x, axis=-1)
-
+            
             if augment:
-                if np.random.uniform() > 0.3: 
-                    # applies augmentation for 70% of the times
-                    x = apply_augmentations(x)
+                x = 2daugmentations(x)
                 
             x = tf.convert_to_tensor(x)
         return x, y
     else:
         raise ValueError("expected plane to be one of ['axial', 'coronal', 'sagittal']")
+
 
 
 
