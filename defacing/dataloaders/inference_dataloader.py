@@ -6,9 +6,9 @@ import shutil
 import numpy as np
 from imgaug import augmenters as iaa
 import matplotlib.pyplot as plt
-from ..helpers.utils import save_vol, load_vol
-from ..preprocessing.conform import conform_data
-from ..preprocessing.normalization import clip, standardize, normalize
+from helpers.utils import save_vol, load_vol
+from preprocessing.conform import conform_data
+from preprocessing.normalization import clip, standardize, normalize
 
 
 class DataGeneratoronFly(object):
