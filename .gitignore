@@ -14,6 +14,7 @@ __pycache__/
 
 # Large files
 *tfrecord*
+save_plots/
 
 # Distribution / packaging
 .Python
