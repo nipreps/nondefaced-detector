@@ -1,42 +1,51 @@
 import nobrainer
 from nobrainer.io import _is_gzipped
 from nobrainer.volume import to_blocks
-import sys
-from ..preprocessing.augmentation import VolumeAugmentations, SliceAugmentations
-from ..helpers.utils import load_vol
-import tensorflow_probability as tfp
+import sys, os
+sys.path.append('..')
+from preprocessing.augmentation import VolumeAugmentations, SliceAugmentations
+from helpers.utils import load_vol
 import tensorflow as tf
 import glob
 import numpy as np
 
 AUTOTUNE = tf.data.experimental.AUTOTUNE
-ROOTDIR = '/work/06850/sbansal6/maverick2/mriqc-shared/experiment_faced_defaced/'
-DISTRIBUTION = load_vol('../defacing/helpers/distribution.nii.gz')[0]
+NAME = 'distribution.nii.gz'
+
+for path in sys.path:
+    for root, dirs, files in os.walk(path):
+        if NAME in files:
+            DISTRIBUTION = load_vol(os.path.join(root, NAME))[0]
+            break
+            
 DISTRIBUTION /= DISTRIBUTION.sum()
 COM = np.unravel_index(int(np.sum(DISTRIBUTION.ravel()*np.arange(len(DISTRIBUTION.ravel())))/np.sum(DISTRIBUTION.ravel())), DISTRIBUTION.shape)
 
 
 # sampling from augmented distribution is same as augmenting the sampled points
 # augmenting distribution at every iteration is expensive, so this way
-sampler = lambda n, distribution = DISTRIBUTION, threshold = 0.1: np.array([ np.unravel_index(
+sampler = lambda n_slices, distribution = DISTRIBUTION, threshold = 0.1: np.array([ np.unravel_index(
           np.random.choice(np.arange(np.prod(distribution.shape)),
                                      p = distribution.ravel()),
           distribution.shape) + (+1 if np.random.randn() > 0.5 else -1)*np.random.randint(0, 
-                                        int(distribution.shape[0]*threshold) + 1, 3) for _ in range(n)]) 
+                                        int(distribution.shape[0]*threshold) + 1, 3) for _ in range(n_slices)]) 
 
 
-3daugmentations = {'rotation': 0.5,
-                        'translation': 0.5,
-                        'noop': 0.3}
-augmentvolume = VolumeAugmentations(DISTRIBUTION, 3daugmentations)
+three_d_augmentations = {'rotation': 0.5,
+                         'translation': 0.5,
+                         'noop': 0.3
+                        }
 
+augmentvolume = VolumeAugmentations(DISTRIBUTION, three_d_augmentations)
 
-2daugmentations = {'rotation': 0.5,
-                    'fliplr': 0.5,
-                    'flipud': 0.5,
-                    'zoom': 0.5,
-                    'noop': 0.3}
-augmentslice = VolumeAugmentations(2daugmentations)
+two_d_augmentations = {'rotation': 0.5,
+                       'fliplr': 0.5,
+                       'flipud': 0.5,
+                       'zoom': 0.5,
+                       'noop': 0.3
+                      }
+
+# augmentslice = VolumeAugmentations(DISTRIBUTION, two_d_augmentations)
 
 
 def get_dataset(
@@ -45,13 +54,14 @@ def get_dataset(
     batch_size,
     volume_shape,
     plane,
-    n = 24,
+    n_slices = 24,
     block_shape=None,
     n_epochs=None,
     mapping=None,
     augment=False,
     shuffle_buffer_size=None,
     num_parallel_calls=AUTOTUNE,
+    mode='train',
 ):
 
     """ Returns tf.data.Dataset after preprocessing from
@@ -90,47 +100,40 @@ def get_dataset(
     #         ),
     #         num_parallel_calls=num_parallel_calls,
     #     )
-
+    
+    
     def _ss(x, y):
-        if 3daugmentations['noop'] < 1:
-            x, y = augmentvolume(x,y)
+        if augment:
+            if three_d_augmentations['noop'] < 1:
+                x, y = augmentvolume(x,y)
         x, y = structural_slice(x, y, 
                                 plane, 
-                                n, 
+                                n_slices, 
                                 augment, 
                                 augmentvolume.distribution)
         return (x, y)
-
+    
+    
     ds = ds.map(_ss, num_parallel_calls)
-
-    #     def _f(x, y):
-    #         x = to_blocks(x, block_shape)
-    #         n_blocks = x.shape[0]
-    #         y = tf.repeat(y, n_blocks)
-    #         return (x, y)
-    #     ds = ds.map(_f, num_parallel_calls=num_parallel_calls)
-
-    # This step is necessary because it reduces the extra dimension.
-    # ds = ds.unbatch()
-
-
+    
     ds = ds.prefetch(buffer_size=batch_size)
 
     if batch_size is not None:
         ds = ds.batch(batch_size=batch_size, drop_remainder=True)
+        
+    if mode == 'train':
+        if shuffle_buffer_size:
+            ds = ds.shuffle(buffer_size=shuffle_buffer_size)
 
-    if shuffle_buffer_size:
-        ds = ds.shuffle(buffer_size=shuffle_buffer_size)
-
-    # Repeat the dataset n_epochs times
-    ds = ds.repeat(n_epochs)
+        # Repeat the dataset n_epochs times
+        ds = ds.repeat(n_epochs)
 
     return ds
 
 
 def structural_slice(x, y, 
                 plane, 
-                n = 4, 
+                n_slices = 4, 
                 augment = False, 
                 distribution = DISTRIBUTION):
 
@@ -154,7 +157,7 @@ def structural_slice(x, y,
     shape = np.array(x.shape)
 
     if isinstance(plane, str) and plane in options:
-        idxs = sampler(n, 
+        idxs = sampler(n_slices, 
                         distribution, 
                         threshold)
 
@@ -180,18 +183,18 @@ def structural_slice(x, y,
             for op in options[:-1]:
                 temp[op] = structural_slice(x, y, 
                                             op, 
-                                            n, 
+                                            n_slices, 
                                             augment, 
                                             distribution)[0]
             x = temp
 
         if not plane == "combined":
-            x = tf.squeeze(tf.gather_nd(x, midx.reshape(n, 1, 1)), axis=1)
+            x = tf.squeeze(tf.gather_nd(x, midx.reshape(n_slices, 1, 1)), axis=1)
             x = tf.math.reduce_mean(x, axis=0)
             x = tf.expand_dims(x, axis=-1)
             
             if augment:
-                x = 2daugmentations(x)
+                x = two_d_augmentations(x)
                 
             x = tf.convert_to_tensor(x)
         return x, y
@@ -199,55 +202,19 @@ def structural_slice(x, y,
         raise ValueError("expected plane to be one of ['axial', 'coronal', 'sagittal']")
 
 
-
-
 if __name__ == "__main__":
-
+    ROOTDIR = '/home/shank/HDDLinux/Stanford/data/mriqc-shared/experiments/experiment_B/128/tfrecords_full'
     n_classes = 2
     global_batch_size = 8
     volume_shape = (64, 64, 64)
     ds = get_dataset(
-        ROOTDIR + "tfrecords/tfrecords_fold_1/data-train_*",
+        os.path.join(ROOTDIR, "data-train_*"),
         n_classes=n_classes,
         batch_size=global_batch_size,
         volume_shape=volume_shape,
-        plane="combined",
-        augment = True,
+        plane="sagittal",
+        augment = False,
         shuffle_buffer_size=3,
     )
 
-    import matplotlib
-    matplotlib.use('Agg')
-    import matplotlib.pyplot as plt
-
     print(ds)
-    for ii in range(100):
-        x,y=next(ds.as_numpy_iterator())
-        # print (np.min(x), np.max(x), np.unique(y))
-        count = 1
-        for i in range(global_batch_size):
-            for key in x.keys():
-                plt.subplot(global_batch_size, 3, count)
-                plt.imshow(x[key][i, :, :, 0])
-                plt.title(str(y[i]))
-                plt.xticks([]," ")
-                plt.yticks([], " ")
-                count += 1
-        plt.savefig("processed_image_combined_{}.png".format(ii))
-
-
-# dataset_train_coronal = get_dataset("tfrecords/tfrecords_fold_1/data-train_*",
-#                             n_classes=n_classes,
-#                             batch_size=global_batch_size,
-#                             volume_shape=volume_shape,
-#                             block_shape=block_shape,
-#                             plane='coronal',
-#                             shuffle_buffer_size=3)
-
-# dataset_train_sagittal = get_dataset("tfrecords/tfrecords_fold_1/data-train_*",
-#                             n_classes=n_classes,
-#                             batch_size=global_batch_size,
-#                             volume_shape=volume_shape,
-#                             block_shape=block_shape,
-#                             plane='sagittal',
-#                             shuffle_buffer_size=3)

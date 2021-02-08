@@ -1,93 +1,55 @@
-import os
-import sys
-import numpy as np
+import sys, os
+sys.path.append('..')
+from models.modelN import CombinedClassifier
+from dataloaders.dataset import get_dataset
+
+
+# Tf packages
 import tensorflow as tf
-import timeit
-
 from tensorflow.keras import backend as K
-from tensorflow.keras.models import load_model
-from ..models.modelN import CombinedClassifier
-from ..dataloaders.inference_dataloader import DataGeneratoronFly
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras import metrics
+from tensorflow.keras import losses
 
-ROOTDIR = "/work/06850/sbansal6/maverick2/mriqc-shared/"
-
-
-class inferer(object):
-    """
-       nMontecarlo: for multiple exp for same model
-       quick: checks for all 3 fold models
-       mode: method to merge predictions
-             allowed ['avg', 'max_vote']
-    """
-
-    def __init__(self, nMontecarlo=8, mode="avg"):
-        r"""
-        """
-        inference_transform_params = {
-            "conform_size": (64, 64, 64),
-            "conform_zoom": (4., 4., 4.), 
-            "nchannels": 1, 
-            "nruns": 8,
-            "nsamples": 20,
-            "save": False, 
-            "transform": None
-        }
-
-        self.mode = mode
-        assert self.mode.lower() in [
-            "avg",
-            "max_vote",
-        ], "unknown mode, allowed mode are ['avg', 'max_vote']"
-
-        self.inference_generator = DataGeneratoronFly(**inference_transform_params)
-        self.model = CombinedClassifier(
-            input_shape=(64, 64), dropout=0.4, wts_root=None, trainable=True
-        )
-        self.model.load_weights(
-
-            os.path.abspath(os.path.join(ROOTDIR, "model_save_dir_final/weights/combined/best-wts.h5"))
-        )
-
-    def infer(self, vol):
-        """
-        vol : can be numpy ndarray or path to volume
-        """
-        slices = self.inference_generator.get_data(vol)
-        
-        slices = np.transpose(np.array(slices),axes=[1, 0, 2, 3, 4])
-        ds = {}
-        ds['axial'] = slices[0]
-        ds['coronal'] = slices[1]
-        ds['sagittal'] = slices[2]
+def inference(tfrecords_path, weights_path, wts_root):
     
-        predictions = self.model.predict(ds)
+    model = CombinedClassifier(
+        input_shape=(128, 128), dropout=0.4, wts_root=wts_root, trainable=False)
+    
+    model.load_weights(os.path.abspath(weights_path))
+    model.trainable = False
+    
+    dataset_test = get_dataset(
+        file_pattern=os.path.join(tfrecords_path, "data-test_*"),
+        n_classes=2,
+        batch_size=16,
+        volume_shape=(128, 128, 128),
+        plane='combined',
+        mode='test'
+    )
 
-        if self.mode.lower() == "max_vote":
-            predictions = np.round(predictions)
-            unique_elements = np.unique(predictions)
-            count_array = np.array(
-                [
-                    sum(predictions == unique_element)
-                    for unique_element in unique_elements
-                ]
-            )
-            pred = (
-                np.argmax(count_array) if len(count_array) > 1 else unique_elements[0]
-            )
-            conf = (
-                1
-                if len(count_array) == 1
-                else count_array[pred] * 1.0 / np.sum(count_array)
-            )
-        elif self.mode.lower() == "avg":
-            conf = np.mean(predictions)
-            pred = np.round(conf)
+    METRICS = [
+        metrics.BinaryAccuracy(name="accuracy"),
+        metrics.Precision(name="precision"),
+        metrics.Recall(name="recall"),
+        metrics.AUC(name="auc"),
+    ]
+    
+    model.compile(
+        loss=tf.keras.losses.binary_crossentropy,
+        optimizer=Adam(learning_rate=1e-3),
+        metrics=METRICS,
+    )
+    
+    model.evaluate(dataset_test)
+    predictions = (model.predict(dataset_test) > 0.5).astype(int)
+    
+    
+    return predictions
 
-        pred_str = "faced" if pred == 1 else "defaced"
-        conf = conf if pred == 1 else 1.0 - conf
-        
-        print("[INFO] Given volume is " + pred_str + " with confidence of: {}".format(conf))
-        
-        # del self.model
-        # K.clear_session()
-        return pred, conf
+if __name__ == "__main__":
+    ROOTDIR = '/tf/shank/HDDLinux/Stanford/data/mriqc-shared/test_ixi'
+    tfrecords_path = os.path.join(ROOTDIR, "tfrecords")
+    weights_path = '/tf/shank/HDDLinux/Stanford/data/mriqc-shared/experiments/experiment_B/128/model_save_dir_full/weights/combined/best-wts.h5'
+    wts_root = '/tf/shank/HDDLinux/Stanford/data/mriqc-shared/experiments/experiment_B/128/model_save_dir_full/weights'
+    inference(tfrecords_path, weights_path, wts_root)
