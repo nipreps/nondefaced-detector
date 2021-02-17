@@ -3,11 +3,12 @@ import sys, os
 import glob
 import math
 
-sys.path.append('..')
+sys.path.append('../..')
 
 # Custom packages
-from models import modelN
-from dataloaders.dataset import get_dataset
+import defacing
+from defacing.models import modelN
+from defacing.dataloaders.dataset import get_dataset
 
 # Tf packages
 import tensorflow as tf
@@ -20,6 +21,7 @@ from tensorflow.keras.callbacks import (
     ModelCheckpoint,
     LearningRateScheduler,
     TensorBoard,
+    EarlyStopping,
 )
 from tensorflow.keras import metrics
 from tensorflow.keras import losses
@@ -145,9 +147,13 @@ def train(
         
         steps_per_epoch = math.ceil(len(train_paths)/batch_size)
         print(steps_per_epoch)
+        
+        # CALLBACKS
         lrcallback = tf.keras.callbacks.LearningRateScheduler(scheduler)
         
         if mode == 'CV':
+            earlystopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=3)
+            
             dataset_valid = get_dataset(
                 file_pattern=os.path.join(tfrecords_path, "data-valid_*"),
                 n_classes=n_classes,
@@ -165,18 +171,21 @@ def train(
                 steps_per_epoch=steps_per_epoch,
                 validation_data=dataset_valid,
                 validation_steps=validation_steps,
-                callbacks=[tbCallback, model_checkpoint],
+                callbacks=[tbCallback, model_checkpoint, earlystopping],
                 class_weight = weights,
             )
+            
             hist_df =  pd.DataFrame(history.history)
+            
         else:
+            earlystopping = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=3)
             print(model.summary())
             print("Steps/Epoch: ", steps_per_epoch)
             history = model.fit(
                 dataset_train,
                 epochs=n_epochs,
                 steps_per_epoch=steps_per_epoch,
-                callbacks=[tbCallback, model_checkpoint],
+                callbacks=[tbCallback, model_checkpoint, earlystopping],
                 class_weight = weights,
             )
             
@@ -193,7 +202,7 @@ def train(
 
 
 if __name__ == "__main__":
-    ROOTDIR = '/home/shank/HDDLinux/Stanford/data/mriqc-shared/experiments/experiment_B/128'
+    ROOTDIR = '/tf/shank/HDDLinux/Stanford/data/mriqc-shared/experiments/experiment_B/128'
     csv_path = os.path.join(ROOTDIR, "csv_full")
     model_save_path = os.path.join(ROOTDIR, "model_save_dir_full")
     tfrecords_path = os.path.join(ROOTDIR, 'tfrecords_full')
