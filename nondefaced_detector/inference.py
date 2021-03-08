@@ -1,7 +1,6 @@
 import sys, os
-sys.path.append('..')
-from models.modelN import CombinedClassifier
-from dataloaders.dataset import get_dataset
+from nondefaced_detector.models.modelN import CombinedClassifier
+from nondefaced_detector.dataloaders.dataset import get_dataset
 
 
 # Tf packages
