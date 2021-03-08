@@ -7,16 +7,19 @@ import os
 import platform
 import sys
 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
 import click
 import nibabel as nib
 import numpy as np
 import nobrainer
-import tensorflow as tf
+# import tensorflow as tf
 
-from nobrainer.io import read_csv as _read_csv
 
-from nondefaced_detector            import __version__
-from nondefaced_detector            import prediction
+from nondefaced_detector import __version__
+from nondefaced_detector import prediction
+from nondefaced_detector import preprocess
+
 from nondefaced_detector.helpers    import utils
 from nondefaced_detector.preprocess import preprocess as _preprocess
 
@@ -101,7 +104,7 @@ def convert(
 @click.argument("outfile")
 @click.option(
     "-m",
-    "--model",
+    "--model-path",
     type=click.Path(exists=True),
     required=True,
     default='../models/pretrained_weights',
@@ -122,6 +125,7 @@ def convert(
     "--preprocess-path",
     type=click.Path(exists=True),
     required=False,
+    default='/tmp',
     help="Path to save preprocessed volumes.",
     **_option_kwds,
 )
@@ -135,7 +139,7 @@ def predict(
     *,
     infile,
     outfile,
-    model,
+    model_path,
     conform_volume_to,
     preprocess_path,
     verbose,
@@ -145,9 +149,11 @@ def predict(
     The predictions are saved to OUTFILE.
     """
 
-    if not verbose:
-        os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
-        tf.get_logger().setLevel(logging.ERROR)
+    if verbose:
+        os.environ['TF_CPP_MIN_LOG_LEVEL'] = '0'
+        import tensorflow as tf
+        tf.get_logger().setLevel(logging.INFO)
+        tf.autograph.set_verbosity(1)
 
     if os.path.exists(outfile):
         raise FileExistsError(
@@ -155,18 +161,22 @@ def predict(
         )
 
 
-    ppath, cpath = _preprocess(infile)
+    ppath, cpath = _preprocess(infile, save_path=preprocess_path)
 
     required_dirs = ['axial', 'coronal', 'sagittal', 'combined']
 
     for plane in required_dirs:
-        if not os.path.isdir(os.path.join(model, plane)):
+        if not os.path.isdir(os.path.join(model_path, plane)):
             raise ValueError('Missing {} directory in model path'.format(plane))
 
     volume, _, _ = utils.load_vol(cpath)
-    predicted = prediction.predict(volume, model)
+    predicted = prediction.predict(volume, model_path)
 
     print(predicted)
+    
+
+    if preprocess_path == '/tmp':
+        preprocess.cleanup_files(ppath, cpath)
 
 
 @cli.command()
@@ -176,6 +186,7 @@ def evaluate():
         "Not implemented yet. In the future, this command will be used for evaluation."
     )
     sys.exit(-2)
+
 
 @cli.command()
 def info():

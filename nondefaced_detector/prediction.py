@@ -125,7 +125,8 @@ def _get_model(model_path):
 
         return model
 
-    except Exception:
+    except Exception as e:
+        print(e)
         pass
 
     raise ValueError("Failed to load model.")
@@ -136,7 +137,6 @@ if __name__=="__main__":
     from nondefaced_detector import preprocess
     from nondefaced_detector.helpers import utils
     
-    weights_path = 'models/pretrained_weights/combined/best-wts.h5'
     wts_root = 'models/pretrained_weights'
 
     vol_path = '../examples/sample_vols/IXI002-Guys-0828-T1.nii.gz'
@@ -144,7 +144,7 @@ if __name__=="__main__":
 
     volume, affine,_ = utils.load_vol(cpath)
 
-    predicted = predict(volume, wts_root, weights_path)
+    predicted = predict(volume, model_path=wts_root)
 
     print(predicted)
 
