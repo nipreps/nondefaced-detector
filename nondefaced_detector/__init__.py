@@ -1,6 +1,7 @@
 from distutils.version import LooseVersion
 
 import tensorflow as tf
+
 import nondefaced_detector.dataloaders
 import nondefaced_detector.helpers
 import nondefaced_detector.prediction
