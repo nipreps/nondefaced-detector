@@ -183,7 +183,7 @@ def CombinedClassifier(
             model.layers[3 * ii].trainable = False
             model.layers[3 * ii + 1].trainable = False
             model.layers[3 * ii + 1].trainable = False
-    print(model.summary())
+
     return model
 
 
