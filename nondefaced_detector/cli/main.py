@@ -166,6 +166,8 @@ def predict(
     volume, _, _ = utils.load_vol(cpath)
     predicted = prediction.predict(volume, model)
 
+    print(predicted)
+
 
 @cli.command()
 def evaluate():
