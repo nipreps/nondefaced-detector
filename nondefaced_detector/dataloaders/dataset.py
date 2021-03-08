@@ -2,9 +2,7 @@ import nobrainer
 from nobrainer.io import _is_gzipped
 from nobrainer.volume import to_blocks
 import sys, os
-sys.path.append('../')
-from defacing.preprocessing.augmentation import VolumeAugmentations, SliceAugmentations
-from defacing.helpers.utils import load_vol
+from nondefaced_detector.helpers.utils import load_vol
 import tensorflow as tf
 import glob
 import numpy as np

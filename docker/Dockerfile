@@ -1,4 +1,4 @@
-FROM tensorflow/tensorflow:nightly-gpu-jupyter
+FROM tensorflow/tensorflow:2.3.2-gpu-jupyter
 
 RUN apt-get install -y vim
 
