@@ -1,9 +1,3 @@
-[![Contributors][contributors-shield]][contributors-url]
-[![Stargazers][stars-shield]][stars-url]
-[![Issues][issues-shield]][issues-url]
-[![Apache 2.0 License][license-shield]][license-url]
-
-
 <!-- PROJECT LOGO -->
 <br />
 <p align="center">
@@ -27,33 +21,19 @@
 </p>
 
 
+## Table of contents
 
-<!-- TABLE OF CONTENTS -->
-<details open="open">
-  <summary>Table of Contents</summary>
-  <ol>
-    <li>
-      <a href="#about-the-project">About The Project</a>
-      <ul>
-        <li><a href="#built-with">Built With</a></li>
-      </ul>
-    </li>
-    <li>
-      <a href="#getting-started">Getting Started</a>
-      <ul>
-        <li><a href="#prerequisites">Prerequisites</a></li>
-        <li><a href="#installation">Installation</a></li>
-      </ul>
-    </li>
-    <li><a href="#usage">Usage</a></li>
-    <li><a href="#roadmap">Roadmap</a></li>
-    <li><a href="#contributing">Contributing</a></li>
-    <li><a href="#license">License</a></li>
-    <li><a href="#contact">Contact</a></li>
-    <li><a href="#acknowledgements">Acknowledgements</a></li>
-  </ol>
-</details>
-
+- [About The Project](#about-the-project)
+  - [Built With](#built-with)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+- [Usage](#usage)
+- [Reproducibility](#reproducibility)
+- [Contributing](#contributing)
+- [License](#license)
+- [Contact](#contact)
+- [Acknowledgements](#acknowledgements)
 
 
 <!-- ABOUT THE PROJECT -->
@@ -75,6 +55,32 @@
 <!-- USAGE EXAMPLES -->
 ## Usage
 
+<!-- USAGE EXAMPLES -->
+## Reproducibility
+
+Steps to reproduce inference results from the paper. 
+
+**Step 1:** Get the preprocessed dataset. You need to have [datalad](https://handbook.datalad.org/en/latest/intro/installation.html) installed. 
+
+```bash
+$ datalad clone https://gin.g-node.org/shashankbansal56/nondefaced-detector-repoducibility.git
+$ cd nondefaced-detector-reproducibility
+$ datalad get text_ixi/tfrecords/*
+
+```
+NOTE: To reproduce inference results from the paper, you only need to download the tfrecords.
+
+**Step 2:** Clone the nondefaced-detector repository.
+
+```bash
+$ git clone https://github.com/poldracklab/nondefaced-detector.git
+
+```
+**Step 3:** Run the standalone inference script. The inference script uses the pre-trained model weights under `nondefaced_detector/models/pretrained_weights`
+```bash
+$ cd nondefaced-detector/nondefaced_detector
+$ python inference.py <PATH_TO_TFRECORDS>
+```
 
 <!-- ROADMAP -->
 ## Roadmap
