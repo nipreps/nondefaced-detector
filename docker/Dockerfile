@@ -2,8 +2,7 @@ FROM tensorflow/tensorflow:latest-gpu-jupyter
 
 RUN apt-get install -y vim
 
-RUN pip3 install --upgrade tensorflow-gpu==2.3.2 \
-
+RUN pip3 install --upgrade tensorflow-gpu==2.3.2
 RUN pip3 install nobrainer \
                  sklearn \
                  pandas  \
