@@ -79,7 +79,7 @@
 <!-- ROADMAP -->
 ## Roadmap
 
-See the [projects board] (https://github.com/poldracklab/nondefaced-detector/projects) for a list of ongoing work and proposed features. 
+See the [projects dashboard](https://github.com/poldracklab/nondefaced-detector/projects) for a list of ongoing work and proposed features. 
 See the [open issues](https://github.com/poldracklab/nondefaced-detector/issues) for a list of known issues.
 
 
