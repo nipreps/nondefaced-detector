@@ -7,16 +7,19 @@ import os
 import platform
 import sys
 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
 import click
 import nibabel as nib
 import numpy as np
 import nobrainer
-import tensorflow as tf
+# import tensorflow as tf
 
-from nobrainer.io import read_csv as _read_csv
 
-from nondefaced_detector            import __version__
-from nondefaced_detector            import prediction
+from nondefaced_detector import __version__
+from nondefaced_detector import prediction
+from nondefaced_detector import preprocess
+
 from nondefaced_detector.helpers    import utils
 from nondefaced_detector.preprocess import preprocess as _preprocess
 
@@ -98,14 +101,21 @@ def convert(
 
 @cli.command()
 @click.argument("infile")
-@click.argument("outfile")
+# @click.argument("outfile")
 @click.option(
     "-m",
-    "--model",
+    "--model-path",
     type=click.Path(exists=True),
     required=True,
-    default='../models/pretrained_weights',
-    help="Path to model weights.",
+    help="Path to model weights. NOTE: A version of pretrained model weights can be found here: https://github.com/poldracklab/nondefaced-detector/tree/master/model_weights",
+    **_option_kwds,
+)
+@click.option(
+    "-t",
+    "--classifier-threshold",
+    default=0.5,
+    type=float,
+    help="Threshold for the classifier [Default is 0.5].",
     **_option_kwds,
 )
 @click.option(
@@ -122,6 +132,7 @@ def convert(
     "--preprocess-path",
     type=click.Path(exists=True),
     required=False,
+    default='/tmp',
     help="Path to save preprocessed volumes.",
     **_option_kwds,
 )
@@ -134,8 +145,8 @@ def convert(
 def predict(
     *,
     infile,
-    outfile,
-    model,
+    classifier_threshold,
+    model_path,
     conform_volume_to,
     preprocess_path,
     verbose,
@@ -145,28 +156,40 @@ def predict(
     The predictions are saved to OUTFILE.
     """
 
-    if not verbose:
-        os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
-        tf.get_logger().setLevel(logging.ERROR)
+    if verbose:
+        os.environ['TF_CPP_MIN_LOG_LEVEL'] = '0'
+        import tensorflow as tf
+        tf.get_logger().setLevel(logging.INFO)
+        tf.autograph.set_verbosity(1)
 
-    if os.path.exists(outfile):
-        raise FileExistsError(
-            "Output file already exists. Will not overwrite {}".format(outfile)
-        )
+    # if os.path.exists(outfile):
+    #     raise FileExistsError(
+    #         "Output file already exists. Will not overwrite {}".format(outfile)
+    #     )
 
 
-    ppath, cpath = _preprocess(infile)
+    ppath, cpath = _preprocess(infile, save_path=preprocess_path)
 
     required_dirs = ['axial', 'coronal', 'sagittal', 'combined']
 
     for plane in required_dirs:
-        if not os.path.isdir(os.path.join(model, plane)):
+        if not os.path.isdir(os.path.join(model_path, plane)):
             raise ValueError('Missing {} directory in model path'.format(plane))
 
     volume, _, _ = utils.load_vol(cpath)
-    predicted = prediction.predict(volume, model)
+    predicted = prediction.predict(volume, model_path)
 
-    print(predicted)
+    print("Final layer output: ", predicted)
+    print("Input classifier threshold: ", classifier_threshold)
+
+    if predicted[0] >= classifier_threshold:
+        print("Predicted Class: NONDEFACED")
+    else:
+        print("Predicted Class: DEFACED")
+    
+
+    if preprocess_path == '/tmp':
+        preprocess.cleanup_files(ppath, cpath)
 
 
 @cli.command()
@@ -176,6 +199,7 @@ def evaluate():
         "Not implemented yet. In the future, this command will be used for evaluation."
     )
     sys.exit(-2)
+
 
 @cli.command()
 def info():

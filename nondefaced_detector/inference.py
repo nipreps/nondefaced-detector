@@ -1,14 +1,20 @@
+"""Run inference on held-out test dataset."""
+
+import argparse
 import sys, os
-from nondefaced_detector.models.modelN import CombinedClassifier
-from nondefaced_detector.dataloaders.dataset import get_dataset
 
 
 # Tf packages
 import tensorflow as tf
 from tensorflow.keras import backend as K
-from tensorflow.keras.optimizers import Adam
 from tensorflow.keras import metrics
 from tensorflow.keras import losses
+from tensorflow.keras.optimizers import Adam
+
+
+from nondefaced_detector.models.modelN import CombinedClassifier
+from nondefaced_detector.dataloaders.dataset import get_dataset
+
 
 def inference(tfrecords_path, weights_path, wts_root):
     
@@ -41,14 +47,20 @@ def inference(tfrecords_path, weights_path, wts_root):
     )
     
     model.evaluate(dataset_test)
-    predictions = (model.predict(dataset_test) > 0.5).astype(int)
+    # predictions = (model.predict(dataset_test) > 0.5).astype(int)
     
-    
-    return predictions
-
 if __name__ == "__main__":
-    ROOTDIR = '/tf/shank/HDDLinux/Stanford/data/mriqc-shared/test_ixi'
-    tfrecords_path = os.path.join(ROOTDIR, "tfrecords")
-    weights_path = '/tf/shank/HDDLinux/Stanford/data/mriqc-shared/experiments/experiment_B/128/model_save_dir_full/weights/combined/best-wts.h5'
-    wts_root = '/tf/shank/HDDLinux/Stanford/data/mriqc-shared/experiments/experiment_B/128/model_save_dir_full/weights'
+
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+            'tfrecords',
+            metavar='path',
+            help="Path to tfrecords.")
+
+    args = parser.parse_args()
+
+    tfrecords_path = args.tfrecords 
+    weights_path = 'models/pretrained_weights/combined/best-wts.h5'
+    wts_root = 'models/pretrained_weights'
     inference(tfrecords_path, weights_path, wts_root)
