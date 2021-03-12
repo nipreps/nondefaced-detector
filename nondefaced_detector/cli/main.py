@@ -101,14 +101,21 @@ def convert(
 
 @cli.command()
 @click.argument("infile")
-@click.argument("outfile")
+# @click.argument("outfile")
 @click.option(
     "-m",
     "--model-path",
     type=click.Path(exists=True),
     required=True,
-    default='../models/pretrained_weights',
-    help="Path to model weights.",
+    help="Path to model weights. NOTE: A version of pretrained model weights can be found here: https://github.com/poldracklab/nondefaced-detector/tree/master/model_weights",
+    **_option_kwds,
+)
+@click.option(
+    "-t",
+    "--classifier-threshold",
+    default=0.5,
+    type=float,
+    help="Threshold for the classifier [Default is 0.5].",
     **_option_kwds,
 )
 @click.option(
@@ -138,7 +145,7 @@ def convert(
 def predict(
     *,
     infile,
-    outfile,
+    classifier_threshold,
     model_path,
     conform_volume_to,
     preprocess_path,
@@ -155,10 +162,10 @@ def predict(
         tf.get_logger().setLevel(logging.INFO)
         tf.autograph.set_verbosity(1)
 
-    if os.path.exists(outfile):
-        raise FileExistsError(
-            "Output file already exists. Will not overwrite {}".format(outfile)
-        )
+    # if os.path.exists(outfile):
+    #     raise FileExistsError(
+    #         "Output file already exists. Will not overwrite {}".format(outfile)
+    #     )
 
 
     ppath, cpath = _preprocess(infile, save_path=preprocess_path)
@@ -172,7 +179,13 @@ def predict(
     volume, _, _ = utils.load_vol(cpath)
     predicted = prediction.predict(volume, model_path)
 
-    print(predicted)
+    print("Final layer output: ", predicted)
+    print("Input classifier threshold: ", classifier_threshold)
+
+    if predicted[0] >= classifier_threshold:
+        print("Predicted Class: NONDEFACED")
+    else:
+        print("Predicted Class: DEFACED")
     
 
     if preprocess_path == '/tmp':
