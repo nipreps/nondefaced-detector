@@ -60,7 +60,7 @@ $ docker run --rm -v $PWD:/data nondefaced-detector:latest-cpu \
     /data/example1.nii.gz
 ```
 
-### From python package installation
+### From pip installation
 
 ```bash
 $ nondefaced-detector
@@ -86,7 +86,7 @@ Steps to reproduce inference results from the paper.
 **Step 1:** Get the preprocessed dataset. You need to have [datalad](https://handbook.datalad.org/en/latest/intro/installation.html) installed. 
 
 ```bash
-$ datalad clone https://gin.g-node.org/shashankbansal56/nondefaced-detector-reproducibility /data/nondefaced-detector/reproducibility
+$ datalad clone https://gin.g-node.org/shashankbansal56/nondefaced-detector-reproducibility /data/nondefaced-detector-reproducibility
 $ cd /data/nondefaced-detector-reproducibility
 $ datalad get test_ixi/tfrecords/*
 
@@ -151,7 +151,7 @@ Shashank Bansal - shashankbansal56@gmail.com
 ## Acknowledgements
 
 ### Training Dataset
-The original model was trained on 36 980 defaced MRI scans from 36 different studies that are publicly available at [OpenNeuro.org](https://openneuro.org/)
+The original model was trained on 980 defaced MRI scans from 36 different studies that are publicly available at [OpenNeuro.org](https://openneuro.org/)
 ### Built With
 
 * [nobrainer](https://github.com/neuronets/nobrainer)
