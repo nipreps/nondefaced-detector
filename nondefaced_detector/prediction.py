@@ -7,7 +7,7 @@ import tensorflow as tf
 from pathlib import Path
 
 from nondefaced_detector.models.modelN import CombinedClassifier
-from nondefaced_detector.helpers       import utils
+from nondefaced_detector.helpers import utils
 
 
 def predict(
@@ -34,7 +34,7 @@ def predict(
 
     model = _get_model(model_path)
 
-    ds = _structural_slice(input_volume, plane='combined', n_slices=n_slices)
+    ds = _structural_slice(input_volume, plane="combined", n_slices=n_slices)
     ds = tf.data.Dataset.from_tensor_slices(ds)
     ds = ds.batch(batch_size=batch_size, drop_remainder=False)
 
@@ -89,7 +89,9 @@ def _structural_slice(x, plane, n_slices=16):
 
         return x
     else:
-        raise ValueError("Expected plane to be one of [sagittal, coronal, axial, combined]")
+        raise ValueError(
+            "Expected plane to be one of [sagittal, coronal, axial, combined]"
+        )
 
 
 def _get_model(model_path):
@@ -112,13 +114,11 @@ def _get_model(model_path):
     try:
         p = Path(model_path).resolve()
 
-        model = CombinedClassifier(
-            input_shape=(128, 128), wts_root=p, trainable=False
-        )
+        model = CombinedClassifier(input_shape=(128, 128), wts_root=p, trainable=False)
 
-        combined_weights = list(
-                Path(os.path.join(p, 'combined')).glob('*.h5')
-        )[0].resolve()
+        combined_weights = list(Path(os.path.join(p, "combined")).glob("*.h5"))[
+            0
+        ].resolve()
 
         model.load_weights(combined_weights)
         model.trainable = False
@@ -132,19 +132,18 @@ def _get_model(model_path):
     raise ValueError("Failed to load model.")
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
 
     from nondefaced_detector import preprocess
     from nondefaced_detector.helpers import utils
-    
-    wts_root = 'models/pretrained_weights'
 
-    vol_path = '../examples/sample_vols/IXI002-Guys-0828-T1.nii.gz'
+    wts_root = "models/pretrained_weights"
+
+    vol_path = "../examples/sample_vols/IXI002-Guys-0828-T1.nii.gz"
     ppath, cpath = preprocess.preprocess(vol_path)
 
-    volume, affine,_ = utils.load_vol(cpath)
+    volume, affine, _ = utils.load_vol(cpath)
 
     predicted = predict(volume, model_path=wts_root)
 
     print(predicted)
-

@@ -5,6 +5,7 @@ import pytest
 
 from nondefacedDetector.cli import main as climain
 
+
 def test_info():
     runner = CliRunner()
     result = runner.invoke(climain.cli, ["info"])

@@ -7,21 +7,25 @@ import os
 import platform
 import sys
 
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
 import click
 import nibabel as nib
 import numpy as np
 import nobrainer
+
 # import tensorflow as tf
 
+from nobrainer.io import read_csv
+from nobrainer.io import verify_features_labels
 
 from nondefaced_detector import __version__
 from nondefaced_detector import prediction
 from nondefaced_detector import preprocess
 
-from nondefaced_detector.helpers    import utils
+from nondefaced_detector.helpers import utils
 from nondefaced_detector.preprocess import preprocess as _preprocess
+from nondefaced_detector.preprocess import preprocess_parallel
 
 
 _option_kwds = {"show_default": True}
@@ -36,13 +40,15 @@ def cli():
 
 @cli.command()
 @click.option(
-    "-c", "--csv",
+    "-c",
+    "--csv",
     type=click.Path(exists=True),
     required=True,
     **_option_kwds,
 )
 @click.option(
-    "-p", "--preprocess-path",
+    "-p",
+    "--preprocess-path",
     type=click.Path(exists=True),
     default=None,
     required=False,
@@ -56,11 +62,13 @@ def cli():
     **_option_kwds,
 )
 @click.option(
-    "-s", "--volume-shape",
+    "-s",
+    "--volume-shape",
+    default=(128, 128, 128),
     nargs=3,
     type=int,
     required=True,
-    **_option_kwds
+    **_option_kwds,
 )
 @click.option(
     "-n",
@@ -71,33 +79,67 @@ def cli():
     **_option_kwds,
 )
 @click.option(
-    "-v", "--verbose",
-    is_flag=True,
-    help="Print progress bar.",
-    **_option_kwds
+    "-j",
+    "--num-parallel-calls",
+    default=-1,
+    type=int,
+    help="Number of processes to use. If -1, uses all available processes.",
+    **_option_kwds,
+)
+@click.option(
+    "-v", "--verbose", is_flag=True, help="Print progress bar.", **_option_kwds
 )
 def convert(
-    *
     csv,
     preprocess_path,
     tfrecords_template,
     volume_shape,
     examples_per_shard,
+    num_parallel_calls,
     verbose,
-    
 ):
-    """Preprocess MRI volumes and convert to Tfrecords. 
-    
+    """Preprocess MRI volumes and convert to Tfrecords.
+
     NOTE: Volumes will all be the same shape after preprocessing.
     """
-    volume_filepaths = _read_csv(csv)
+
+    volume_filepaths = read_csv(csv)
+
     num_parallel_calls = None if num_parallel_calls == -1 else num_parallel_calls
     if num_parallel_calls is None:
         # Get number of processes allocated to the current process.
         # Note the difference from `os.cpu_count()`.
         num_parallel_calls = len(os.sched_getaffinity(0))
 
-    return
+    invalid_pairs  = verify_features_labels(
+        volume_filepaths,
+        check_labels_int=True,
+        num_parallel_calls=num_parallel_calls,
+        verbose=1,
+    )
+
+    ## UNCOMMENT the following when https://github.com/neuronets/nobrainer/pull/125
+    ## is merged
+    # if not invalid_pairs:
+    #     click.echo(click.style("Passed verification.", fg="green"))
+    # else:
+    #     click.echo(click.style("Failed verification.", fg="red"))
+    #     for pair in invalid_pairs:
+    #         click.echo(pair[0])
+    #         click.echo(pair[1])
+    #     sys.exit(-1)
+
+    vpaths = list(zip(*volume_filepaths))[0]
+
+    ppaths = preprocess_parallel(
+        vpaths,
+        conform_volume_to=volume_shape,
+        num_parallel_calls=num_parallel_calls,
+        save_path=preprocess_path,
+    )
+
+    print(ppaths)
+
 
 @cli.command()
 @click.argument("infile")
@@ -132,15 +174,12 @@ def convert(
     "--preprocess-path",
     type=click.Path(exists=True),
     required=False,
-    default='/tmp',
+    default="/tmp",
     help="Path to save preprocessed volumes.",
     **_option_kwds,
 )
 @click.option(
-    "-v", "--verbose", 
-    is_flag=True,
-    help="Print progress bar.",
-    **_option_kwds
+    "-v", "--verbose", is_flag=True, help="Print progress bar.", **_option_kwds
 )
 def predict(
     *,
@@ -157,8 +196,9 @@ def predict(
     """
 
     if verbose:
-        os.environ['TF_CPP_MIN_LOG_LEVEL'] = '0'
+        os.environ["TF_CPP_MIN_LOG_LEVEL"] = "0"
         import tensorflow as tf
+
         tf.get_logger().setLevel(logging.INFO)
         tf.autograph.set_verbosity(1)
 
@@ -167,14 +207,13 @@ def predict(
     #         "Output file already exists. Will not overwrite {}".format(outfile)
     #     )
 
-
     ppath, cpath = _preprocess(infile, save_path=preprocess_path)
 
-    required_dirs = ['axial', 'coronal', 'sagittal', 'combined']
+    required_dirs = ["axial", "coronal", "sagittal", "combined"]
 
     for plane in required_dirs:
         if not os.path.isdir(os.path.join(model_path, plane)):
-            raise ValueError('Missing {} directory in model path'.format(plane))
+            raise ValueError("Missing {} directory in model path".format(plane))
 
     volume, _, _ = utils.load_vol(cpath)
     predicted = prediction.predict(volume, model_path)
@@ -186,9 +225,8 @@ def predict(
         print("Predicted Class: NONDEFACED")
     else:
         print("Predicted Class: DEFACED")
-    
 
-    if preprocess_path == '/tmp':
+    if preprocess_path == "/tmp":
         preprocess.cleanup_files(ppath, cpath)
 
 
@@ -225,6 +263,7 @@ System:
  Architecture: {uname.machine}
 Timestamp: {datetime.datetime.utcnow().strftime('%Y/%m/%d %T')}"""
     click.echo(s)
+
 
 if __name__ == "__main__":
     cli()

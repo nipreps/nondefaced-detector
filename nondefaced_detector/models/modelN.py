@@ -9,17 +9,15 @@ import tensorflow.keras.backend as K
 
 
 def ConvBNrelu(x, filters=32, kernel=3, strides=1, padding="same"):
-    """
-    """
+    """"""
     x = layers.Conv2D(filters, kernel, strides=strides, padding=padding)(x)
     x = layers.BatchNormalization()(x)
-    x = layers.Activation('relu')(x)
+    x = layers.Activation("relu")(x)
     return x
 
 
 def TruncatedSubmodel(input_layer):
-    """
-    """
+    """"""
     conv1 = ConvBNrelu(input_layer, filters=8, kernel=3, strides=1, padding="same")
     conv1 = ConvBNrelu(conv1, filters=8, kernel=3, strides=1, padding="same")
     conv1 = layers.MaxPooling2D()(conv1)
@@ -37,8 +35,7 @@ def TruncatedSubmodel(input_layer):
 
 
 def ClassifierHead(layer, dropout):
-    """
-    """
+    """"""
     out = layers.Dense(256, activation="relu")(layer)
     out = layers.Dropout(dropout)(out)
     out = layers.Dense(1, activation="sigmoid", name="output_node")(out)
@@ -54,8 +51,7 @@ def Submodel(
     root_path=None,
     trainable=True,
 ):
-    """
-    """
+    """"""
     input_layer = layers.Input(shape=input_shape + (1,), name=name)
     features = TruncatedSubmodel(input_layer)
 
@@ -77,14 +73,9 @@ def Submodel(
 
 
 def CombinedClassifier(
-    input_shape=(32, 32), 
-    dropout=0.4, 
-    wts_root=None, 
-    trainable=False,
-    shared=False
+    input_shape=(32, 32), dropout=0.4, wts_root=None, trainable=False, shared=False
 ):
-    """
-    """
+    """"""
 
     axial_features = Submodel(
         input_shape,
@@ -127,9 +118,9 @@ def CombinedClassifier(
 
     else:
 
-        p1 = layers.Input(shape=input_shape + (1,), name='plane1')
-        p2 = layers.Input(shape=input_shape + (1,), name='plane2')
-        p3 = layers.Input(shape=input_shape + (1,), name='plane3')
+        p1 = layers.Input(shape=input_shape + (1,), name="plane1")
+        p2 = layers.Input(shape=input_shape + (1,), name="plane2")
+        p3 = layers.Input(shape=input_shape + (1,), name="plane3")
 
         merge_features = [
             axial_features(p1),
