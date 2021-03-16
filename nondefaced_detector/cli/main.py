@@ -16,14 +16,15 @@ import nobrainer
 
 # import tensorflow as tf
 
-from nobrainer.io import read_csv
-from nobrainer.io import verify_features_labels
+from nobrainer.io       import read_csv
+from nobrainer.io       import verify_features_labels
+from nobrainer.tfrecord import write as _write_tfrecord
 
 from nondefaced_detector import __version__
 from nondefaced_detector import prediction
 from nondefaced_detector import preprocess
 
-from nondefaced_detector.helpers import utils
+from nondefaced_detector.helpers    import utils
 from nondefaced_detector.preprocess import preprocess as _preprocess
 from nondefaced_detector.preprocess import preprocess_parallel
 
@@ -111,11 +112,11 @@ def convert(
         # Note the difference from `os.cpu_count()`.
         num_parallel_calls = len(os.sched_getaffinity(0))
 
-    invalid_pairs  = verify_features_labels(
+    invalid_pairs = verify_features_labels(
         volume_filepaths,
         check_labels_int=True,
         num_parallel_calls=num_parallel_calls,
-        verbose=1,
+        verbose=verbose,
     )
 
     ## UNCOMMENT the following when https://github.com/neuronets/nobrainer/pull/125
@@ -129,16 +130,53 @@ def convert(
     #         click.echo(pair[1])
     #     sys.exit(-1)
 
-    vpaths = list(zip(*volume_filepaths))[0]
-
     ppaths = preprocess_parallel(
-        vpaths,
+        volume_filepaths,
         conform_volume_to=volume_shape,
         num_parallel_calls=num_parallel_calls,
         save_path=preprocess_path,
     )
 
-    print(ppaths)
+    invalid_pairs = verify_features_labels(
+        ppaths,
+        volume_shape=volume_shape,
+        check_labels_int=True,
+        num_parallel_calls=num_parallel_calls,
+        verbose=verbose,
+    )
+
+    if not invalid_pairs:
+        click.echo(
+            click.style("Passed post preprocessing re-verification.", fg="green")
+        )
+    else:
+        click.echo(click.style("Failed post preprocessing re-verification.", fg="red"))
+        click.echo(
+            f"Oops! This is embarrasing. Looks like our preprocessing"
+            " script shit the bed. Found {len(invalid_pairs)} invalid"
+            " pairs of volumes. These files might not all have shape "
+            " {volume_shape} or the labels might not be scalar values"
+            " Please report this issue on                            "
+            " https://github.com/poldracklab/nondefaced-detector     "
+        )
+
+        for pair in invalid_pairs:
+            click.echo(pair[0])
+            click.echo(pair[1])
+        sys.exit(-1)
+
+    # TODO: Convert to tfrecords
+    os.makedirs(os.path.dirname(tfrecords_template), exist_ok=True)
+
+    _write_tfrecord(
+            features_labels=ppaths,
+            filename_template=tfrecords_template,
+            examples_per_shard=examples_per_shard,
+            processes=num_parallel_calls,
+            verbose=verbose,
+    )
+
+    click.echo(click.style("Finished conversion to TFRecords.", fg="green"))
 
 
 @cli.command()
