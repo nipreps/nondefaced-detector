@@ -19,14 +19,26 @@ def preprocess(
     conform_volume_to=(128, 128, 128),
     conform_zooms=(2.0, 2.0, 2.0),
     save_path=None,
+    with_label=False,
 ):
 
     try:
-        if not save_path:
-            save_path = os.path.join(os.path.dirname(vol_path), "preprocessed")
-            os.makedirs(save_path, exist_ok=True)
+        vpath = vol_path
+        if with_label:
+            if len(vol_path) != 2:
+                raise ValueError(
+                    "The vol_path must have length of 2 when with_label=True"
+                )
 
-        volume, affine, _ = utils.load_vol(vol_path)
+            vpath, label = vol_path
+
+        spath = os.path.join(os.path.dirname(vpath), "preprocessed")
+        if save_path:
+            spath = os.path.join(save_path, "preprocessed")
+
+        os.makedirs(spath, exist_ok=True)
+
+        volume, affine, _ = utils.load_vol(vpath)
 
         # Prepocessing
         volume = clip(volume, q=90)
@@ -36,12 +48,12 @@ def preprocess(
         tmp_preprocess_vol = tempfile.NamedTemporaryFile(
             suffix=".nii.gz",
             delete=True,
-            dir=save_path,
+            dir=spath,
         )
 
         utils.save_vol(tmp_preprocess_vol.name, volume, affine)
 
-        tmp_conform_vol = os.path.join(save_path, os.path.basename(vol_path))
+        tmp_conform_vol = os.path.join(spath, os.path.basename(vpath))
 
         conform_data(
             tmp_preprocess_vol.name,
@@ -52,6 +64,8 @@ def preprocess(
 
         tmp_preprocess_vol.close()
 
+        if with_label:
+            return (tmp_conform_vol, label)
         return tmp_conform_vol
 
     except Exception as e:
@@ -65,14 +79,24 @@ def preprocess_parallel(
     conform_volume_to=(128, 128, 128),
     conform_zooms=(2.0, 2.0, 2.0),
     save_path=None,
+    with_label=True,
 ):
 
     try:
+        if with_label:
+            for pair in volume_filepaths:
+                if len(pair) != 2:
+                    raise ValueError(
+                        "all items in 'volume_filepaths' must have length of 2, but"
+                        " found at least one item with lenght != 2."
+                    )
+
         map_fn = functools.partial(
             preprocess,
             conform_volume_to=conform_volume_to,
             conform_zooms=conform_zooms,
             save_path=save_path,
+            with_label=with_label,
         )
 
         if num_parallel_calls is None:
