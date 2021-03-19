@@ -22,7 +22,7 @@ import time
 
 def class_0_acc(y_true, y_pred):
     """
-        class 0 acc
+    class 0 acc
     """
     y_pred = K.flatten(K.round(y_pred[..., 0]))
     y_true = K.flatten(K.round(y_true[..., 0]))
@@ -34,7 +34,7 @@ def class_0_acc(y_true, y_pred):
 
 def class_1_acc(y_true, y_pred):
     """
-        class 1 acc
+    class 1 acc
     """
     y_pred = K.flatten(K.round(y_pred[..., 1]))
     y_true = K.flatten(K.round(y_true[..., 1]))
@@ -45,7 +45,7 @@ def class_1_acc(y_true, y_pred):
 
 
 def roc_auc_score(y_true, y_pred):
-    """ ROC AUC Score.
+    """ROC AUC Score.
     Approximates the Area Under Curve score, using approximation based on
     the Wilcoxon-Mann-Whitney U statistic.
     Yan, L., Dodier, R., Mozer, M. C., & Wolniewicz, R. (2003).

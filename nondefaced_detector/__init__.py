@@ -10,7 +10,8 @@ import nondefaced_detector.preprocessing
 import nondefaced_detector.training
 
 from ._version import get_versions
-__version__ = get_versions()['version']
+
+__version__ = get_versions()["version"]
 del get_versions
 
 if LooseVersion(tf.__version__) < LooseVersion("2.0.0"):
