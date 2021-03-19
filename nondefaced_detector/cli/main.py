@@ -1,6 +1,9 @@
 """Main command-line interface for nondefaced-detector."""
 
+import click
+import csv
 import datetime
+import errno
 import json
 import logging
 import os
@@ -9,7 +12,6 @@ import sys
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
-import click
 import nibabel as nib
 import numpy as np
 import nobrainer
@@ -22,10 +24,9 @@ from nobrainer.tfrecord import write as _write_tfrecord
 
 from nondefaced_detector import __version__
 from nondefaced_detector import prediction
-from nondefaced_detector import preprocess
 
 from nondefaced_detector.helpers    import utils
-from nondefaced_detector.preprocess import preprocess as _preprocess
+from nondefaced_detector.preprocess import preprocess, cleanup_files
 from nondefaced_detector.preprocess import preprocess_parallel
 
 
@@ -147,7 +148,6 @@ def convert(
 
     if not invalid_pairs:
         click.echo(
-            click.style("Passed post preprocessing re-verification.", fg="green")
         )
     else:
         click.echo(click.style("Failed post preprocessing re-verification.", fg="red"))
@@ -217,6 +217,20 @@ def convert(
     **_option_kwds,
 )
 @click.option(
+    "-j",
+    "--num-parallel-calls",
+    default=-1,
+    type=int,
+    help="Number of processes to use. If -1, uses all available processes.",
+    **_option_kwds,
+)
+@click.option(
+    "--skip-header", is_flag=True, help="Skip csv header.", **_option_kwds
+)
+@click.option(
+    "--keep-preprocessed", is_flag=True, help="Keep the preprocessed volumes.", **_option_kwds
+)
+@click.option(
     "-v", "--verbose", is_flag=True, help="Print progress bar.", **_option_kwds
 )
 def predict(
@@ -226,6 +240,9 @@ def predict(
     model_path,
     conform_volume_to,
     preprocess_path,
+    num_parallel_calls,
+    skip_header,
+    keep_preprocessed,
     verbose,
 ):
     """Predict labels from features using a trained model.
@@ -245,7 +262,10 @@ def predict(
     #         "Output file already exists. Will not overwrite {}".format(outfile)
     #     )
 
-    ppath, cpath = _preprocess(infile, save_path=preprocess_path)
+    if not os.path.exists(infile):
+        raise FileNotFoundError(
+                errno.ENOENT, os.strerror(errno.ENOENT), filename
+        )
 
     required_dirs = ["axial", "coronal", "sagittal", "combined"]
 
@@ -253,19 +273,62 @@ def predict(
         if not os.path.isdir(os.path.join(model_path, plane)):
             raise ValueError("Missing {} directory in model path".format(plane))
 
-    volume, _, _ = utils.load_vol(cpath)
-    predicted = prediction.predict(volume, model_path)
+    if infile.endswith('.nii') or infile.endswith('.nii.gz'):
 
-    print("Final layer output: ", predicted)
-    print("Input classifier threshold: ", classifier_threshold)
+        cpath = preprocess(
+                infile,
+                save_path=preprocess_path,
+                with_label=False
+        )
 
-    if predicted[0] >= classifier_threshold:
-        print("Predicted Class: NONDEFACED")
-    else:
-        print("Predicted Class: DEFACED")
+        volume, _, _ = utils.load_vol(cpath)
+        model = prediction._get_model(model_path)
+        predicted = prediction._predict(volume, model)
 
-    if preprocess_path == "/tmp":
-        preprocess.cleanup_files(ppath, cpath)
+        print("Final layer output: ", predicted)
+        print("Input classifier threshold: ", classifier_threshold)
+
+        if predicted[0] >= classifier_threshold:
+            print("Predicted Class: NONDEFACED")
+        else:
+            print("Predicted Class: DEFACED")
+
+        if preprocess_path == "/tmp":
+            cleanup_files(cpath)
+
+    if infile.endswith('csv'):
+        filepaths = []
+        with open(infile, newline="") as csvfile:
+            reader = csv.reader(csvfile, delimiter=",")
+            if skip_header:
+                next(reader)
+
+            for row in reader:
+                filepaths.append(row[0])
+
+        num_parallel_calls = None if num_parallel_calls == -1 else num_parallel_calls
+        if num_parallel_calls is None:
+            # Get number of processes allocated to the current process.
+            # Note the difference from `os.cpu_count()`.
+            num_parallel_calls = len(os.sched_getaffinity(0))
+
+        outputs = preprocess_parallel(
+                filepaths,
+                num_parallel_calls=num_parallel_calls,
+                conform_volume_to=conform_volume_to,
+                with_label=False,
+        )
+
+        preds = prediction.predict(outputs, model_path=model_path, n_slices=32)
+
+        with open('outputs.csv', 'w') as out:
+            csv_out = csv.writer(out)
+            csv_out.writerow(['volume','score'])
+            for row in preds:
+                csv_out.writerow(row)
+
+        if not keep_preprocessed:
+            cleanup_files(*outputs)
 
 
 @cli.command()

@@ -1,22 +1,18 @@
 """Methods to predict using trained models"""
 
 import os
+
 import numpy as np
 import tensorflow as tf
 
 from pathlib import Path
+from tqdm    import tqdm
 
+from nondefaced_detector.helpers       import utils
 from nondefaced_detector.models.modelN import CombinedClassifier
-from nondefaced_detector.helpers import utils
 
 
-def predict(
-    input_volume,
-    model_path,
-    batch_size=1,
-    n_samples=1,
-    n_slices=32,
-):
+def _predict(volume, model, n_slices=32):
     """Return predictions from `inputs`.
 
     This is a general prediction method.
@@ -24,23 +20,37 @@ def predict(
     Parameters
     ---------
 
-
     Returns
     ------
     """
-
-    if n_samples < 1:
-        raise Exception("n_samples cannot be lower than 1.")
-
-    model = _get_model(model_path)
-
-    ds = _structural_slice(input_volume, plane="combined", n_slices=n_slices)
+    
+    if not isinstance(volume, (np.ndarray)):
+        raise ValueError("volume is not a numpy ndarray")
+        
+    ds = _structural_slice(volume, plane="combined", n_slices=n_slices)
     ds = tf.data.Dataset.from_tensor_slices(ds)
-    ds = ds.batch(batch_size=batch_size, drop_remainder=False)
+    ds = ds.batch(batch_size=1, drop_remainder=False)
 
     predicted = model.predict(ds)
 
     return predicted
+
+
+def predict(volumes, model_path, n_slices=32):
+    
+    if not isinstance(volumes, list):
+        raise ValueError('Volumes need to be a list of paths to preprocessed MRI volumes.')
+    
+    outputs = []
+    model = _get_model(model_path)
+    
+    for path in tqdm(volumes, total=len(volumes)):
+        vol,_,_ = utils.load_vol(path)
+        predicted = _predict(vol, model)
+        
+        outputs.append((path, predicted[0][0]))
+        
+    return outputs
 
 
 def _structural_slice(x, plane, n_slices=16):
@@ -139,11 +149,9 @@ if __name__ == "__main__":
 
     wts_root = "models/pretrained_weights"
 
-    vol_path = "../examples/sample_vols/IXI002-Guys-0828-T1.nii.gz"
-    ppath, cpath = preprocess.preprocess(vol_path)
+    vol_path = "../examples/sample_vols/faced/example1.nii.gz"
+    ppath = preprocess.preprocess(vol_path)
 
-    volume, affine, _ = utils.load_vol(cpath)
-
-    predicted = predict(volume, model_path=wts_root)
+    predicted = predict(list(ppath), model_path=wts_root)
 
     print(predicted)
