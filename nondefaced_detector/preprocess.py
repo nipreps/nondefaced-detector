@@ -9,9 +9,10 @@ import multiprocessing as mp
 from pathlib import Path
 from tqdm import tqdm
 
+
+from nondefaced_detector.preprocessing.conform       import conform_data
+from nondefaced_detector.helpers                     import utils
 from nondefaced_detector.preprocessing.normalization import clip, normalize, standardize
-from nondefaced_detector.preprocessing.conform import conform_data
-from nondefaced_detector.helpers import utils
 
 
 def preprocess(
@@ -42,8 +43,8 @@ def preprocess(
 
         # Prepocessing
         volume = clip(volume, q=90)
-        volume = normalize(volume)
         volume = standardize(volume)
+        volume = normalize(volume)
 
         tmp_preprocess_vol = tempfile.NamedTemporaryFile(
             suffix=".nii.gz",
