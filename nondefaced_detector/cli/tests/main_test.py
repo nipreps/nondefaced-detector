@@ -3,7 +3,7 @@
 from click.testing import CliRunner
 import pytest
 
-from nondefacedDetector.cli import main as climain
+from nondefaced_detector.cli import main as climain
 
 
 def test_info():
@@ -13,3 +13,15 @@ def test_info():
     assert "Python" in result.output
     assert "System" in result.output
     assert "Timestamp" in result.output
+
+
+def test_covert():
+    return
+
+
+def test_predict():
+    return
+
+
+def test_evaluate():
+    return
