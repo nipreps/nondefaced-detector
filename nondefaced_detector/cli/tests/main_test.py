@@ -15,13 +15,16 @@ def test_info():
     assert "Timestamp" in result.output
 
 
-def test_covert():
+@pytest.mark.xfail
+def test_convert():
     return
 
 
+@pytest.mark.xfail
 def test_predict():
     return
 
 
+@pytest.mark.xfail
 def test_evaluate():
     return

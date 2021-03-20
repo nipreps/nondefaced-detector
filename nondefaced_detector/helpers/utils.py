@@ -2,18 +2,12 @@
 
 
 import binascii
-import glob
 import os
-import random
-import sys
-import time
 
 import matplotlib.pyplot as plt
 import nibabel as nib
 import numpy as np
-import tensorflow as tf
 
-from tensorflow.keras import backend as K
 from tensorflow.python.client import device_lib
 
 
@@ -116,42 +110,6 @@ def imshow(*args, **kwargs):
     plt.show()
 
 
-def performance_evaluator(gt, prediction):
-    """"""
-
-    gt = np.array(gt, dtype="float32")
-    prediction = np.array(prediction, dtype="float32")
-    correct = np.sum(prediction == gt)
-    accuracy = correct * 100.0 / (len(gt) + 1e-5)
-
-    cm = confusion_matrix(gt, prediction)
-
-    tp = sum((prediction == 1) * (gt == 1))
-    tn = sum((prediction == 0) * (gt == 0))
-    fp = sum((prediction == 1) * (gt == 0))
-    fn = sum((prediction == 0) * (gt == 1))
-
-    sensitivity = tp * 1.0 / (tp + fn + 1e-3)
-    specificity = tn * 1.0 / (tn + fp + 1e-3)
-
-    print("Inference Logs =======================")
-    print("confusion matrix", cm)
-    print("Accuracy on Inference Data: {:.3f}".format(accuracy))
-    print("Sensitivity on Inference Data: {:.3f}".format(sensitivity))
-    print("Specificity on Inference Data: {:.3f}".format(specificity))
-
-    json = {
-        "true_positive": str(tp),
-        "false_positive": str(fp),
-        "true_negative": str(tn),
-        "false_negative": str(fn),
-        "specificity": str(specificity),
-        "sensitivity": str(sensitivity),
-        "accuracy": str(accuracy),
-    }
-    return json
-
-
 def get_available_gpus():
     """
     Get the total number of GPUs available
@@ -168,13 +126,3 @@ def schedule_steps(epoch, steps):
             return step[0]
     print("Setting learning rate to {}".format(steps[-1][0]))
     return steps[-1][0]
-
-
-if __name__ == "__main__":
-    vol, aff, _ = load_vol(
-        "/home/pi/mri-face-detector/sample_vols/faced/example4.nii.gz"
-    )
-    vol = resize_sitk(vol, outputSize=(64, 64, 64))
-    save_vol(
-        "/home/pi/mri-face-detector/sample_vols/faced/example4_conf.nii.gz", vol, aff
-    )

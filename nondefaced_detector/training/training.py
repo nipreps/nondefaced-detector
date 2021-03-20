@@ -1,30 +1,26 @@
-# Std packages
-import sys, os
-import glob
+"""Training module for nondefaced-detector."""
+
+
+import os
 import math
 
-sys.path.append("../..")
-
-# Custom packages
-import defacing
-from defacing.models import modelN
-from defacing.dataloaders.dataset import get_dataset
-
-# Tf packages
 import tensorflow as tf
 import pandas as pd
 import numpy as np
+
 from sklearn.utils import class_weight
 from tensorflow.keras import backend as K
+from tensorflow.keras import metrics
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.callbacks import (
     ModelCheckpoint,
-    LearningRateScheduler,
+    # LearningRateScheduler,
     TensorBoard,
     EarlyStopping,
 )
-from tensorflow.keras import metrics
-from tensorflow.keras import losses
+
+from nondefaced_detector.models import modelN
+from nondefaced_detector.dataloaders.dataset import get_dataset
 
 
 def scheduler(epoch):
@@ -55,7 +51,7 @@ def train(
     if mode == "CV":
         valid_csv_path = os.path.join(csv_path, "validation.csv")
         valid_paths = pd.read_csv(valid_csv_path)["X"].values
-        valid_labels = pd.read_csv(valid_csv_path)["Y"].values
+        # valid_labels = pd.read_csv(valid_csv_path)["Y"].values
 
     weights = class_weight.compute_class_weight(
         "balanced", np.unique(train_labels), train_labels
@@ -147,12 +143,10 @@ def train(
         print(steps_per_epoch)
 
         # CALLBACKS
-        lrcallback = tf.keras.callbacks.LearningRateScheduler(scheduler)
+        # lrcallback = LearningRateScheduler(scheduler)
 
         if mode == "CV":
-            earlystopping = tf.keras.callbacks.EarlyStopping(
-                monitor="val_loss", patience=3
-            )
+            earlystopping = EarlyStopping(monitor="val_loss", patience=3)
 
             dataset_valid = get_dataset(
                 file_pattern=os.path.join(tfrecords_path, "data-valid_*"),
@@ -178,7 +172,7 @@ def train(
             hist_df = pd.DataFrame(history.history)
 
         else:
-            earlystopping = tf.keras.callbacks.EarlyStopping(monitor="loss", patience=3)
+            earlystopping = EarlyStopping(monitor="loss", patience=3)
             print(model.summary())
             print("Steps/Epoch: ", steps_per_epoch)
             history = model.fit(

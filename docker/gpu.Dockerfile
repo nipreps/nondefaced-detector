@@ -10,7 +10,7 @@ RUN pip3 install nobrainer \
                  numpy   \
                  matplotlib \
                  nibabel
-                
+
 COPY [".", "/opt/nondefaced-detector"]
 
 RUN python3 -m pip install --no-cache-dir --editable /opt/nondefaced-detector
