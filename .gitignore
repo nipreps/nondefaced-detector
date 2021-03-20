@@ -6,6 +6,16 @@ __pycache__/
 # C extensions
 *.so
 
+<<<<<<< HEAD
+=======
+# Temp files
+*.swp
+
+# Large files
+*tfrecord*
+save_plots/
+
+>>>>>>> 7eb4caf... [FIX, REFORMATTING] pre-commit run
 # Distribution / packaging
 .Python
 build/

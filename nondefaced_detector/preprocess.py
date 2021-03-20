@@ -1,17 +1,16 @@
 """Script to preprocess volumes"""
 
 import functools
-import sys, os
+import os
 import tempfile
 
 import multiprocessing as mp
 
-from pathlib import Path
 from tqdm import tqdm
 
 
-from nondefaced_detector.preprocessing.conform       import conform_data
-from nondefaced_detector.helpers                     import utils
+from nondefaced_detector.preprocessing.conform import conform_data
+from nondefaced_detector.helpers import utils
 from nondefaced_detector.preprocessing.normalization import clip, normalize, standardize
 
 
@@ -47,9 +46,7 @@ def preprocess(
         volume = normalize(volume)
 
         tmp_preprocess_vol = tempfile.NamedTemporaryFile(
-            suffix=".nii.gz",
-            delete=True,
-            dir=spath,
+            suffix=".nii.gz", delete=True, dir=spath
         )
 
         utils.save_vol(tmp_preprocess_vol.name, volume, affine)

@@ -1,11 +1,8 @@
-import numpy as np
+"""Model definition for nondefaced-detector."""
+
+
 import os
-import nibabel as nib
-import random
-import time
 from tensorflow.keras import layers, models
-from tensorflow.keras import regularizers
-import tensorflow.keras.backend as K
 
 
 def ConvBNrelu(x, filters=32, kernel=3, strides=1, padding="same"):
@@ -122,20 +119,13 @@ def CombinedClassifier(
         p2 = layers.Input(shape=input_shape + (1,), name="plane2")
         p3 = layers.Input(shape=input_shape + (1,), name="plane3")
 
-        merge_features = [
-            axial_features(p1),
-            axial_features(p2),
-            axial_features(p3),
-        ]
+        merge_features = [axial_features(p1), axial_features(p2), axial_features(p3)]
         input_features = [p1, p2, p3]
 
     add_features = layers.Add()(merge_features)
     prob = ClassifierHead(add_features, dropout)
 
-    model = models.Model(
-        inputs=input_features,
-        outputs=prob,
-    )
+    model = models.Model(inputs=input_features, outputs=prob)
 
     if not trainable:
         assert not (wts_root == None)
@@ -176,15 +166,3 @@ def CombinedClassifier(
             model.layers[3 * ii + 1].trainable = False
 
     return model
-
-
-"""
-if __name__ == '__main__':
-    axial = Submodel(name='axial', weights=None)
-    coronal = Submodel(name='coronal', weights=None)
-    sagittal = Submodel(name='sagittal', weights = None)
-    
-    combined = CombinedClassifier()
-    print (combined.summary())
-
-"""
