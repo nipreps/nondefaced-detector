@@ -6,9 +6,9 @@ import numpy as np
 import tensorflow as tf
 
 from pathlib import Path
-from tqdm    import tqdm
+from tqdm import tqdm
 
-from nondefaced_detector.helpers       import utils
+from nondefaced_detector.helpers import utils
 from nondefaced_detector.models.modelN import CombinedClassifier
 
 
@@ -23,10 +23,10 @@ def _predict(volume, model, n_slices=32):
     Returns
     ------
     """
-    
+
     if not isinstance(volume, (np.ndarray)):
         raise ValueError("volume is not a numpy ndarray")
-        
+
     ds = _structural_slice(volume, plane="combined", n_slices=n_slices)
     ds = tf.data.Dataset.from_tensor_slices(ds)
     ds = ds.batch(batch_size=1, drop_remainder=False)
@@ -37,19 +37,21 @@ def _predict(volume, model, n_slices=32):
 
 
 def predict(volumes, model_path, n_slices=32):
-    
+
     if not isinstance(volumes, list):
-        raise ValueError('Volumes need to be a list of paths to preprocessed MRI volumes.')
-    
+        raise ValueError(
+            "Volumes need to be a list of paths to preprocessed MRI volumes."
+        )
+
     outputs = []
     model = _get_model(model_path)
-    
+
     for path in tqdm(volumes, total=len(volumes)):
-        vol,_,_ = utils.load_vol(path)
+        vol, _, _ = utils.load_vol(path)
         predicted = _predict(vol, model)
-        
+
         outputs.append((path, predicted[0][0]))
-        
+
     return outputs
 
 
@@ -145,7 +147,6 @@ def _get_model(model_path):
 if __name__ == "__main__":
 
     from nondefaced_detector import preprocess
-    from nondefaced_detector.helpers import utils
 
     wts_root = "models/pretrained_weights"
 

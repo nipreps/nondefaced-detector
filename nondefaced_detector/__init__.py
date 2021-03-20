@@ -7,7 +7,6 @@ import nondefaced_detector.helpers
 import nondefaced_detector.prediction
 import nondefaced_detector.preprocess
 import nondefaced_detector.preprocessing
-import nondefaced_detector.training
 
 from ._version import get_versions
 

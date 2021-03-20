@@ -1,16 +1,14 @@
 """Method for creating tf.data.Dataset objects."""
 
 import glob
-import sys, os
+import os
 
 import numpy as np
 import tensorflow as tf
 
 import nobrainer
 from nobrainer.io import _is_gzipped
-from nobrainer.volume import to_blocks
 
-from nondefaced_detector.helpers.utils import load_vol
 
 AUTOTUNE = tf.data.experimental.AUTOTUNE
 
@@ -97,7 +95,6 @@ def structural_slice(x, y, plane, n_slices=4):
     """
 
     options = ["sagittal", "coronal", "axial", "combined"]
-    shape = np.array(x.shape)
     if isinstance(plane, str) and plane in options:
         idxs = np.random.randint(x.shape[0], size=(n_slices, 3))
         #         idxs = np.array([[64, 64, 64]])

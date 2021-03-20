@@ -1,16 +1,13 @@
 """Run inference on held-out test dataset."""
 
 import argparse
-import sys, os
+import os
 
 
 # Tf packages
 import tensorflow as tf
-from tensorflow.keras import backend as K
 from tensorflow.keras import metrics
-from tensorflow.keras import losses
 from tensorflow.keras.optimizers import Adam
-
 
 from nondefaced_detector.models.modelN import CombinedClassifier
 from nondefaced_detector.dataloaders.dataset import get_dataset

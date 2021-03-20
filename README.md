@@ -22,7 +22,7 @@ A framework to detect if a 3D MRI volume has been defaced.
 ## Installation
 
 ### Container
-We recommend using the latest *Nondefaced-detector* docker container, which includes all the dependencies required for the framework. 
+We recommend using the latest *Nondefaced-detector* docker container, which includes all the dependencies required for the framework.
 
 **GPU**
 
@@ -81,9 +81,9 @@ Commands:
 <!-- USAGE EXAMPLES -->
 ## Reproducibility
 
-Steps to reproduce inference results from the paper. 
+Steps to reproduce inference results from the paper.
 
-**Step 1:** Get the preprocessed dataset. You need to have [datalad](https://handbook.datalad.org/en/latest/intro/installation.html) installed. 
+**Step 1:** Get the preprocessed dataset. You need to have [datalad](https://handbook.datalad.org/en/latest/intro/installation.html) installed.
 
 ```bash
 $ datalad clone https://gin.g-node.org/shashankbansal56/nondefaced-detector-reproducibility /data/nondefaced-detector-reproducibility
@@ -96,7 +96,7 @@ NOTE: To reproduce inference results from the paper, you only need to download t
 **Step 2:** Depending on your system create a tensorflow-cpu/gpu virtual environment. We recommend using [conda](https://conda.io/projects/conda/en/latest/user-guide/install/index.html).
 
 ```bash
-$ conda create -n tf-cpu tensorflow 
+$ conda create -n tf-cpu tensorflow
 $ conda activate tf-cpu
 ```
 
@@ -110,17 +110,17 @@ $ git clone https://github.com/poldracklab/nondefaced-detector.git
 $ cd nondefaced-detector
 $ pip install -e .
 $ cd nondefaced_detector
-$ python inference.py < PATH_TO_TFRECORDS [/data/nondefaced-detector-reproducibility/test_ixi/tfrecords] > 
+$ python inference.py < PATH_TO_TFRECORDS [/data/nondefaced-detector-reproducibility/test_ixi/tfrecords] >
 ```
 
 ## Paper
 
 ## Roadmap
 
-See the [projects dashboard](https://github.com/poldracklab/nondefaced-detector/projects) for a list of ongoing work and proposed features. 
+See the [projects dashboard](https://github.com/poldracklab/nondefaced-detector/projects) for a list of ongoing work and proposed features.
 
 ## Questions or Issues
-See the [open issues](https://github.com/poldracklab/nondefaced-detector/issues) for a list of known issues. If you have any questions or encounter any issues, please submit a github issue. 
+See the [open issues](https://github.com/poldracklab/nondefaced-detector/issues) for a list of known issues. If you have any questions or encounter any issues, please submit a github issue.
 
 
 <!-- CONTRIBUTING -->
@@ -144,7 +144,7 @@ Distributed under the Apache 2.0 License. See `LICENSE` for more information.
 <!-- CONTACT -->
 ## Contact
 
-Shashank Bansal - shashankbansal56@gmail.com 
+Shashank Bansal - shashankbansal56@gmail.com
 
 
 <!-- ACKNOWLEDGEMENTS -->

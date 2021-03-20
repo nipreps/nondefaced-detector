@@ -4,28 +4,27 @@ import click
 import csv
 import datetime
 import errno
-import json
 import logging
 import os
 import platform
 import sys
 
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+
+import nobrainer
 
 import nibabel as nib
 import numpy as np
-import nobrainer
+import tensorflow as tf
 
-# import tensorflow as tf
-
-from nobrainer.io       import read_csv
-from nobrainer.io       import verify_features_labels
+from nobrainer.io import read_csv
+from nobrainer.io import verify_features_labels
 from nobrainer.tfrecord import write as _write_tfrecord
 
 from nondefaced_detector import __version__
 from nondefaced_detector import prediction
 
-from nondefaced_detector.helpers    import utils
+from nondefaced_detector.helpers import utils
 from nondefaced_detector.preprocess import preprocess, cleanup_files
 from nondefaced_detector.preprocess import preprocess_parallel
 
@@ -42,11 +41,7 @@ def cli():
 
 @cli.command()
 @click.option(
-    "-c",
-    "--csv",
-    type=click.Path(exists=True),
-    required=True,
-    **_option_kwds,
+    "-c", "--csv", type=click.Path(exists=True), required=True, **_option_kwds
 )
 @click.option(
     "-p",
@@ -120,8 +115,8 @@ def convert(
         verbose=verbose,
     )
 
-    ## UNCOMMENT the following when https://github.com/neuronets/nobrainer/pull/125
-    ## is merged
+    # UNCOMMENT the following when https://github.com/neuronets/nobrainer/pull/125
+    # is merged
     # if not invalid_pairs:
     #     click.echo(click.style("Passed verification.", fg="green"))
     # else:
@@ -147,8 +142,7 @@ def convert(
     )
 
     if not invalid_pairs:
-        click.echo(
-        )
+        click.echo()
     else:
         click.echo(click.style("Failed post preprocessing re-verification.", fg="red"))
         click.echo(
@@ -169,11 +163,11 @@ def convert(
     os.makedirs(os.path.dirname(tfrecords_template), exist_ok=True)
 
     _write_tfrecord(
-            features_labels=ppaths,
-            filename_template=tfrecords_template,
-            examples_per_shard=examples_per_shard,
-            processes=num_parallel_calls,
-            verbose=verbose,
+        features_labels=ppaths,
+        filename_template=tfrecords_template,
+        examples_per_shard=examples_per_shard,
+        processes=num_parallel_calls,
+        verbose=verbose,
     )
 
     click.echo(click.style("Finished conversion to TFRecords.", fg="green"))
@@ -224,11 +218,12 @@ def convert(
     help="Number of processes to use. If -1, uses all available processes.",
     **_option_kwds,
 )
+@click.option("--skip-header", is_flag=True, help="Skip csv header.", **_option_kwds)
 @click.option(
-    "--skip-header", is_flag=True, help="Skip csv header.", **_option_kwds
-)
-@click.option(
-    "--keep-preprocessed", is_flag=True, help="Keep the preprocessed volumes.", **_option_kwds
+    "--keep-preprocessed",
+    is_flag=True,
+    help="Keep the preprocessed volumes.",
+    **_option_kwds,
 )
 @click.option(
     "-v", "--verbose", is_flag=True, help="Print progress bar.", **_option_kwds
@@ -263,9 +258,7 @@ def predict(
     #     )
 
     if not os.path.exists(infile):
-        raise FileNotFoundError(
-                errno.ENOENT, os.strerror(errno.ENOENT), filename
-        )
+        raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), infile)
 
     required_dirs = ["axial", "coronal", "sagittal", "combined"]
 
@@ -273,13 +266,9 @@ def predict(
         if not os.path.isdir(os.path.join(model_path, plane)):
             raise ValueError("Missing {} directory in model path".format(plane))
 
-    if infile.endswith('.nii') or infile.endswith('.nii.gz'):
+    if infile.endswith(".nii") or infile.endswith(".nii.gz"):
 
-        cpath = preprocess(
-                infile,
-                save_path=preprocess_path,
-                with_label=False
-        )
+        cpath = preprocess(infile, save_path=preprocess_path, with_label=False)
 
         volume, _, _ = utils.load_vol(cpath)
         model = prediction._get_model(model_path)
@@ -296,7 +285,7 @@ def predict(
         if preprocess_path == "/tmp":
             cleanup_files(cpath)
 
-    if infile.endswith('csv'):
+    if infile.endswith("csv"):
         filepaths = []
         with open(infile, newline="") as csvfile:
             reader = csv.reader(csvfile, delimiter=",")
@@ -313,17 +302,17 @@ def predict(
             num_parallel_calls = len(os.sched_getaffinity(0))
 
         outputs = preprocess_parallel(
-                filepaths,
-                num_parallel_calls=num_parallel_calls,
-                conform_volume_to=conform_volume_to,
-                with_label=False,
+            filepaths,
+            num_parallel_calls=num_parallel_calls,
+            conform_volume_to=conform_volume_to,
+            with_label=False,
         )
 
         preds = prediction.predict(outputs, model_path=model_path, n_slices=32)
 
-        with open('outputs.csv', 'w') as out:
+        with open("outputs.csv", "w") as out:
             csv_out = csv.writer(out)
-            csv_out.writerow(['volume','score'])
+            csv_out.writerow(["volume", "score"])
             for row in preds:
                 csv_out.writerow(row)
 
