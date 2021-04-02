@@ -142,8 +142,6 @@ if __name__ == "__main__":
 
     import matplotlib.pyplot as plt
 
-    # x, y = next(ds.as_numpy_operator())
-    # print(x.shape, y)
     times = 0
     for x, y in ds.as_numpy_iterator():
         if times == 3:

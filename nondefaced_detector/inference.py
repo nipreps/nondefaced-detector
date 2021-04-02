@@ -3,8 +3,6 @@
 import argparse
 import os
 
-
-# Tf packages
 import tensorflow as tf
 from tensorflow.keras import metrics
 from tensorflow.keras.optimizers import Adam
@@ -45,18 +43,3 @@ def inference(tfrecords_path, weights_path, wts_root):
     )
 
     model.evaluate(dataset_test)
-    # predictions = (model.predict(dataset_test) > 0.5).astype(int)
-
-
-if __name__ == "__main__":
-
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument("tfrecords", metavar="path", help="Path to tfrecords.")
-
-    args = parser.parse_args()
-
-    tfrecords_path = args.tfrecords
-    weights_path = "models/pretrained_weights/combined/best-wts.h5"
-    wts_root = "models/pretrained_weights"
-    inference(tfrecords_path, weights_path, wts_root)

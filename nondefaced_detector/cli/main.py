@@ -252,10 +252,10 @@ def predict(
         tf.get_logger().setLevel(logging.INFO)
         tf.autograph.set_verbosity(1)
 
-    # if os.path.exists(outfile):
-    #     raise FileExistsError(
-    #         "Output file already exists. Will not overwrite {}".format(outfile)
-    #     )
+    if os.path.exists(outfile):
+        raise FileExistsError(
+            "Output file already exists. Will not overwrite {}".format(outfile)
+        )
 
     if not os.path.exists(infile):
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), infile)
