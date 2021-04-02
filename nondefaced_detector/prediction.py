@@ -9,7 +9,7 @@ from pathlib import Path
 from tqdm import tqdm
 
 from nondefaced_detector.helpers import utils
-from nondefaced_detector.models.modelN import CombinedClassifier
+from nondefaced_detector.models.model import CombinedClassifier
 
 
 def _predict(volume, model, n_slices=32):

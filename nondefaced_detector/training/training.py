@@ -18,7 +18,7 @@ from tensorflow.keras.callbacks import (
     EarlyStopping,
 )
 
-from nondefaced_detector.models import modelN
+from nondefaced_detector.models import model
 from nondefaced_detector.dataloaders.dataset import get_dataset
 
 

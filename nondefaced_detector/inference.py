@@ -7,7 +7,7 @@ import tensorflow as tf
 from tensorflow.keras import metrics
 from tensorflow.keras.optimizers import Adam
 
-from nondefaced_detector.models.modelN import CombinedClassifier
+from nondefaced_detector.models.model import CombinedClassifier
 from nondefaced_detector.dataloaders.dataset import get_dataset
 
 
