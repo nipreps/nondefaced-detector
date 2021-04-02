@@ -9,9 +9,7 @@ import tensorflow as tf
 import nobrainer
 from nobrainer.io import _is_gzipped
 
-
 AUTOTUNE = tf.data.experimental.AUTOTUNE
-
 
 def get_dataset(
     file_pattern,
@@ -124,35 +122,3 @@ def structural_slice(x, y, plane, n_slices=4):
         return x, y
     else:
         raise ValueError("expected plane to be one of [sagittal, coronal, axial]")
-
-
-if __name__ == "__main__":
-    ROOTDIR = "/tf/shank/HDDLinux/Stanford/data/mriqc-shared/experiments/experiment_B/128/tfrecords_full"
-    n_classes = 2
-    global_batch_size = 8
-    volume_shape = (128, 128, 128)
-    ds = get_dataset(
-        os.path.join(ROOTDIR, "data-train_*"),
-        n_classes=n_classes,
-        batch_size=global_batch_size,
-        volume_shape=volume_shape,
-        plane="coronal",
-        shuffle_buffer_size=3,
-    )
-
-    import matplotlib.pyplot as plt
-
-    times = 0
-    for x, y in ds.as_numpy_iterator():
-        if times == 3:
-            break
-        print(x.shape, y)
-        times += 1
-
-        fig = plt.figure(figsize=(25, 8))
-
-        for i in range(1, 9):
-            fig.add_subplot(1, 8, i)
-            plt.imshow(x[i - 1, :, :])
-
-        print(ds)
