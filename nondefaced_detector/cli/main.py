@@ -175,13 +175,20 @@ def convert(
 
 @cli.command()
 @click.argument("infile")
-# @click.argument("outfile")
 @click.option(
     "-m",
     "--model-path",
     type=click.Path(exists=True),
     required=True,
     help="Path to model weights. NOTE: A version of pretrained model weights can be found here: https://github.com/poldracklab/nondefaced-detector/tree/master/model_weights",
+    **_option_kwds,
+)
+@click.option(
+    "-o",
+    "--outfile",
+    required=False,
+    default='outputs.csv'
+    help="Path to save output csv file, set if infile is a csv",
     **_option_kwds,
 )
 @click.option(
@@ -231,6 +238,7 @@ def convert(
 def predict(
     *,
     infile,
+    outfile,
     classifier_threshold,
     model_path,
     conform_volume_to,
@@ -251,11 +259,6 @@ def predict(
 
         tf.get_logger().setLevel(logging.INFO)
         tf.autograph.set_verbosity(1)
-
-    # if os.path.exists(outfile):
-    #     raise FileExistsError(
-    #         "Output file already exists. Will not overwrite {}".format(outfile)
-    #     )
 
     if not os.path.exists(infile):
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), infile)
@@ -310,7 +313,17 @@ def predict(
 
         preds = prediction.predict(outputs, model_path=model_path, n_slices=32)
 
-        with open("outputs.csv", "w") as out:
+        if os.path.exists(outfile):
+            raise FileExistsError(
+                "Output file already exists. Will not overwrite {}".format(outfile)
+            )
+
+        if not outfile.endswith('csv'):
+            raise ValueError(
+                "Need a csv file for writing output"
+            )
+
+        with open(outfile, "w") as out:
             csv_out = csv.writer(out)
             csv_out.writerow(["volume", "score"])
             for row in preds:

@@ -9,7 +9,7 @@ from pathlib import Path
 from tqdm import tqdm
 
 from nondefaced_detector.helpers import utils
-from nondefaced_detector.models.modelN import CombinedClassifier
+from nondefaced_detector.models.model import CombinedClassifier
 
 
 def _predict(volume, model, n_slices=32):
@@ -142,17 +142,3 @@ def _get_model(model_path):
         pass
 
     raise ValueError("Failed to load model.")
-
-
-if __name__ == "__main__":
-
-    from nondefaced_detector import preprocess
-
-    wts_root = "models/pretrained_weights"
-
-    vol_path = "../examples/sample_vols/faced/example1.nii.gz"
-    ppath = preprocess.preprocess(vol_path)
-
-    predicted = predict(list(ppath), model_path=wts_root)
-
-    print(predicted)

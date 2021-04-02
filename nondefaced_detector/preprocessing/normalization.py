@@ -2,7 +2,6 @@ import numpy as np
 
 
 def clip(x, q=90):
-
     x = np.nan_to_num(x)
 
     min_val = 0
@@ -13,7 +12,6 @@ def clip(x, q=90):
 
 
 def standardize(x):
-
     std = np.std(x)
     median = np.percentile(x, q=50, axis=None)
     return (x - median) / std
@@ -22,5 +20,4 @@ def standardize(x):
 def normalize(x):
     min_vol = np.min(x)
     max_vol = np.max(x)
-
     return (x - min_vol) / (max_vol - min_vol + 1e-3)

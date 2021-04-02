@@ -8,7 +8,6 @@ import multiprocessing as mp
 
 from tqdm import tqdm
 
-
 from nondefaced_detector.preprocessing.conform import conform_data
 from nondefaced_detector.helpers import utils
 from nondefaced_detector.preprocessing.normalization import clip, normalize, standardize
@@ -128,12 +127,3 @@ def cleanup_files(*args):
     for p in args:
         if os.path.exists(p):
             os.remove(p)
-
-
-if __name__ == "__main__":
-    vol_path = "../examples/sample_vols/faced/example1.nii.gz"
-    cpath = preprocess(vol_path)
-    print(cpath)
-    cleanup_files(cpath)
-
-    # parallel test

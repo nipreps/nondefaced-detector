@@ -14,12 +14,11 @@ from tensorflow.keras import metrics
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.callbacks import (
     ModelCheckpoint,
-    # LearningRateScheduler,
     TensorBoard,
     EarlyStopping,
 )
 
-from nondefaced_detector.models import modelN
+from nondefaced_detector.models import model
 from nondefaced_detector.dataloaders.dataset import get_dataset
 
 
@@ -58,8 +57,6 @@ def train(
     )
     weights = dict(enumerate(weights))
 
-    print(weights)
-
     planes = ["axial", "coronal", "sagittal", "combined"]
 
     global_batch_size = batch_size
@@ -70,7 +67,6 @@ def train(
     metrics_path = os.path.join(model_save_path, "metrics")
 
     os.makedirs(metrics_path, exist_ok=True)
-    #     os.makedirs(logdir_path, exist_ok=True)
 
     for plane in planes:
 
@@ -87,8 +83,6 @@ def train(
             save_weights_only=True,
             mode="min",
         )
-
-        #         with strategy.scope():
 
         if not plane == "combined":
             lr = 1e-3
@@ -109,7 +103,6 @@ def train(
             )
 
         print("Submodel: ", plane)
-        #         print(model.summary())
 
         METRICS = [
             metrics.TruePositives(name="tp"),
@@ -128,8 +121,6 @@ def train(
             metrics=METRICS,
         )
 
-        print("GLOBAL BATCH SIZE: ", global_batch_size)
-
         dataset_train = get_dataset(
             file_pattern=os.path.join(tfrecords_path, "data-train_*"),
             n_classes=n_classes,
@@ -140,10 +131,6 @@ def train(
         )
 
         steps_per_epoch = math.ceil(len(train_paths) / batch_size)
-        print(steps_per_epoch)
-
-        # CALLBACKS
-        # lrcallback = LearningRateScheduler(scheduler)
 
         if mode == "CV":
             earlystopping = EarlyStopping(monitor="val_loss", patience=3)
@@ -189,25 +176,4 @@ def train(
         with open(jsonfile, mode="w") as f:
             hist_df.to_json(f)
 
-        del model
-        K.clear_session()
-
     return history
-
-
-if __name__ == "__main__":
-    ROOTDIR = (
-        "/tf/shank/HDDLinux/Stanford/data/mriqc-shared/experiments/experiment_B/128"
-    )
-    csv_path = os.path.join(ROOTDIR, "csv_full")
-    model_save_path = os.path.join(ROOTDIR, "model_save_dir_full")
-    tfrecords_path = os.path.join(ROOTDIR, "tfrecords_full")
-
-    history = train(
-        csv_path,
-        model_save_path,
-        tfrecords_path,
-        volume_shape=(128, 128, 128),
-        image_size=(128, 128),
-        mode="full",
-    )
