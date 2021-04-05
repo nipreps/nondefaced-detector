@@ -5,5 +5,5 @@ from setuptools import setup
 setup(
     name="nondefaced-detector",
     use_scm_version=True,
-    setup_requires=['setuptools_scm'],
+    setup_requires=["setuptools_scm", "setuptools_scm_git_archive"],
 )
