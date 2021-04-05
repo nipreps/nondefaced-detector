@@ -6,6 +6,7 @@ The Dockerfiles in this directory can be used to create Docker images to use _No
 
 ```bash
 cd /code/nondefaced-detector  # Top-level nondefaced-detector directory
+python setup.py --version  # Ensure that a version submodule is generated (setuptools-scm)
 docker build -t nondefaced-detector:master-cpu -f docker/cpu.Dockerfile .
 docker build -t nondefaced-detector:master-gpu -f docker/gpu.Dockerfile .
 ```
