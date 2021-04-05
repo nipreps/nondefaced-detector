@@ -2,10 +2,8 @@
 To install, run `python3 setup.py install`.
 """
 from setuptools import setup
-
-import versioneer
-
-version = versioneer.get_version()
-cmdclass = versioneer.get_cmdclass()
-
-setup(version=version, cmdclass=cmdclass)
+setup(
+    name="nondefaced-detector",
+    use_scm_version=True,
+    setup_requires=['setuptools_scm'],
+)
