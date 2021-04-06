@@ -1,4 +1,5 @@
 from distutils.version import LooseVersion
+from pkg_resources import get_distribution, DistributionNotFound
 
 import tensorflow as tf
 
@@ -8,10 +9,11 @@ import nondefaced_detector.prediction
 import nondefaced_detector.preprocess
 import nondefaced_detector.preprocessing
 
-from ._version import get_versions
-
-__version__ = get_versions()["version"]
-del get_versions
+try:
+    __version__ = get_distribution("nondefaced-detector").version
+except DistributionNotFound:
+    # package is not installed
+    pass
 
 if LooseVersion(tf.__version__) < LooseVersion("2.0.0"):
     raise ValueError(

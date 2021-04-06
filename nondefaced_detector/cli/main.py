@@ -17,11 +17,15 @@ import nibabel as nib
 import numpy as np
 import tensorflow as tf
 
+# Following works only for python>3.8
+# from importlib.metadata import version, PackageNotFoundError
+
+from pkg_resources import get_distribution, DistributionNotFound
+
 from nobrainer.io import read_csv
 from nobrainer.io import verify_features_labels
 from nobrainer.tfrecord import write as _write_tfrecord
 
-from nondefaced_detector import __version__
 from nondefaced_detector import prediction
 
 from nondefaced_detector.helpers import utils
@@ -30,6 +34,12 @@ from nondefaced_detector.preprocess import preprocess_parallel
 
 
 _option_kwds = {"show_default": True}
+
+try:
+    __version__ = get_distribution("nondefaced-detector").version
+except DistributionNotFound:
+    # package is not installed
+    pass
 
 
 @click.group()
@@ -187,7 +197,7 @@ def convert(
     "-o",
     "--outfile",
     required=False,
-    default='outputs.csv'
+    default="outputs.csv",
     help="Path to save output csv file, set if infile is a csv",
     **_option_kwds,
 )
@@ -318,10 +328,8 @@ def predict(
                 "Output file already exists. Will not overwrite {}".format(outfile)
             )
 
-        if not outfile.endswith('csv'):
-            raise ValueError(
-                "Need a csv file for writing output"
-            )
+        if not outfile.endswith("csv"):
+            raise ValueError("Need a csv file for writing output")
 
         with open(outfile, "w") as out:
             csv_out = csv.writer(out)
