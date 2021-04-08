@@ -86,8 +86,8 @@ Steps to reproduce inference results from the paper.
 **Step 1:** Get the preprocessed dataset. You need to have [datalad](https://handbook.datalad.org/en/latest/intro/installation.html) installed.
 
 ```bash
-$ datalad clone https://gin.g-node.org/shashankbansal56/nondefaced-detector-reproducibility /data/nondefaced-detector-reproducibility
-$ cd /data/nondefaced-detector-reproducibility
+$ datalad clone https://gin.g-node.org/shashankbansal56/nondefaced-detector-reproducibility /opt/nondefaced-detector-reproducibility
+$ cd /opt/nondefaced-detector-reproducibility
 $ datalad get test_ixi/tfrecords/*
 
 ```
@@ -110,7 +110,7 @@ $ git clone https://github.com/poldracklab/nondefaced-detector.git
 $ cd nondefaced-detector
 $ pip install -e .
 $ cd nondefaced_detector
-$ python inference.py < PATH_TO_TFRECORDS [/data/nondefaced-detector-reproducibility/test_ixi/tfrecords] >
+$ python inference.py <PATH_TO_TFRECORDS [/opt/nondefaced-detector-reproducibility/test_ixi/tfrecords]>
 ```
 
 ## Paper
