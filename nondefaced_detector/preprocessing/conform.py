@@ -7,6 +7,7 @@ from scipy.ndimage import map_coordinates
 import numpy as np
 import nibabel as nb
 
+
 def conform_data(
     in_file, out_file=None, out_size=(256, 256, 256), out_zooms=(1.0, 1.0, 1.0), order=3
 ):

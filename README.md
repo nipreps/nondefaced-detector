@@ -163,7 +163,7 @@ Shashank Bansal - shashankbansal56@gmail.com
 
 
 <!-- ACKNOWLEDGEMENTS -->
-## Acknowledgements 
+## Acknowledgements
 
 ### Training Dataset
 The original model was trained on 980 defaced MRI scans from 36 different studies that are publicly available at [OpenNeuro.org](https://openneuro.org/)

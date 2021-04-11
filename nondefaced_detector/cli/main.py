@@ -28,10 +28,10 @@ from nobrainer.tfrecord import write as _write_tfrecord
 
 from nondefaced_detector import prediction
 
-from nondefaced_detector.helpers    import utils
+from nondefaced_detector.helpers import utils
 from nondefaced_detector.preprocess import preprocess, cleanup_files
 from nondefaced_detector.preprocess import preprocess_parallel
-from nondefaced_detector.utils      import get_datalad
+from nondefaced_detector.utils import get_datalad
 
 
 _option_kwds = {"show_default": True}
@@ -277,12 +277,13 @@ def predict(
 
     print("model_path:", model_path)
     if not model_path:
-        print("Model weights not found. \
-                Downloading to /tmp/nondefaced-detector-reproducibility")
+        print(
+            "Model weights not found. \
+                Downloading to /tmp/nondefaced-detector-reproducibility"
+        )
 
         cache_dir = get_datalad()
-        model_path = os.path.join(cache_dir, 'pretrained_weights')
-
+        model_path = os.path.join(cache_dir, "pretrained_weights")
 
     required_dirs = ["axial", "coronal", "sagittal", "combined"]
 

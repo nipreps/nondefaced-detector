@@ -2,6 +2,7 @@
 To install, run `python3 setup.py install`.
 """
 from setuptools import setup
+
 setup(
     name="nondefaced-detector",
     use_scm_version=True,

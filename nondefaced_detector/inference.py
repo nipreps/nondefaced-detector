@@ -49,8 +49,12 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("tfrecords", metavar="tfrecords_path", help="Path to tfrecords.")
-    parser.add_argument("model_path", metavar="model_path", help="Path to pretrained model weights.")
+    parser.add_argument(
+        "tfrecords", metavar="tfrecords_path", help="Path to tfrecords."
+    )
+    parser.add_argument(
+        "model_path", metavar="model_path", help="Path to pretrained model weights."
+    )
 
     args = parser.parse_args()
 

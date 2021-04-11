@@ -14,9 +14,7 @@ try:
     __version__ = get_distribution("nondefaced-detector").version
 except DistributionNotFound:
     # package is not installed
-    raise ValueError(
-            "nondefaced-detector must be installed"
-        )
+    raise ValueError("nondefaced-detector must be installed")
 
 if LooseVersion(tf.__version__) < LooseVersion("2.0.0"):
     raise ValueError(

@@ -12,13 +12,9 @@ from sklearn.utils import class_weight
 from tensorflow.keras import backend as K
 from tensorflow.keras import metrics
 from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.callbacks import (
-    ModelCheckpoint,
-    TensorBoard,
-    EarlyStopping,
-)
+from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping
 
-from nondefaced_detector.models import model
+from nondefaced_detector.models import model as _model
 from nondefaced_detector.dataloaders.dataset import get_dataset
 
 
@@ -86,7 +82,7 @@ def train(
 
         if not plane == "combined":
             lr = 1e-3
-            model = modelN.Submodel(
+            model = _model.Submodel(
                 input_shape=image_size,
                 dropout=dropout,
                 name=plane,
@@ -95,7 +91,7 @@ def train(
             )
         else:
             lr = 5e-4
-            model = modelN.CombinedClassifier(
+            model = _model.CombinedClassifier(
                 input_shape=image_size,
                 dropout=dropout,
                 trainable=True,
