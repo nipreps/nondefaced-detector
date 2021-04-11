@@ -43,3 +43,18 @@ def inference(tfrecords_path, weights_path, wts_root):
     )
 
     model.evaluate(dataset_test)
+
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("tfrecords", metavar="tfrecords_path", help="Path to tfrecords.")
+    parser.add_argument("model_path", metavar="model_path", help="Path to pretrained model weights.")
+
+    args = parser.parse_args()
+
+    tfrecords_path = args.tfrecords
+    model_path = args.model_path
+    combined_path = os.path.join(model_path, "combined/best-wts.h5")
+    inference(tfrecords_path, combined_path, model_path)

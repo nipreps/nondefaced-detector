@@ -28,9 +28,10 @@ from nobrainer.tfrecord import write as _write_tfrecord
 
 from nondefaced_detector import prediction
 
-from nondefaced_detector.helpers import utils
+from nondefaced_detector.helpers    import utils
 from nondefaced_detector.preprocess import preprocess, cleanup_files
 from nondefaced_detector.preprocess import preprocess_parallel
+from nondefaced_detector.utils      import get_datalad
 
 
 _option_kwds = {"show_default": True}
@@ -189,8 +190,9 @@ def convert(
     "-m",
     "--model-path",
     type=click.Path(exists=True),
-    required=True,
-    help="Path to model weights. NOTE: A version of pretrained model weights can be found here: https://github.com/poldracklab/nondefaced-detector/tree/master/model_weights",
+    help="Path to model weights. \
+    NOTE: A version of pretrained model weights can be found here: \
+    https://gin.g-node.org/shashankbansal56/nondefaced-detector-reproducibility/pretrained_weights",
     **_option_kwds,
 )
 @click.option(
@@ -272,6 +274,15 @@ def predict(
 
     if not os.path.exists(infile):
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), infile)
+
+    print("model_path:", model_path)
+    if not model_path:
+        print("Model weights not found. \
+                Downloading to /tmp/nondefaced-detector-reproducibility")
+
+        cache_dir = get_datalad()
+        model_path = os.path.join(cache_dir, 'pretrained_weights')
+
 
     required_dirs = ["axial", "coronal", "sagittal", "combined"]
 
