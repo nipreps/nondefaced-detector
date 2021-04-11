@@ -8,12 +8,15 @@ import nondefaced_detector.helpers
 import nondefaced_detector.prediction
 import nondefaced_detector.preprocess
 import nondefaced_detector.preprocessing
+import nondefaced_detector.utils
 
 try:
     __version__ = get_distribution("nondefaced-detector").version
 except DistributionNotFound:
     # package is not installed
-    pass
+    raise ValueError(
+            "nondefaced-detector must be installed"
+        )
 
 if LooseVersion(tf.__version__) < LooseVersion("2.0.0"):
     raise ValueError(

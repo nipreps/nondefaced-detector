@@ -1,4 +1,10 @@
 # Nondefaced-Detector
+
+[![PyPI version](https://badge.fury.io/py/nondefaced-detector.svg)](https://badge.fury.io/py/nondefaced-detector)
+[![Downloads](https://pepy.tech/badge/nondefaced-detector)](https://pepy.tech/project/nondefaced-detector)
+[![Documentation Status](https://readthedocs.org/projects/nondefaced-detector/badge/?version=latest)](https://nondefaced-detector.readthedocs.io/en/latest/?badge=latest)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_License,_2.0-lightgrey.svg)](https://opensource.org/licenses/Apache-2.0)
+
 A framework to detect if a 3D MRI volume has been defaced.
 
 ## Table of contents
@@ -44,7 +50,7 @@ NOTE: The CPU container will be very slow for training. We highly recommend that
 ### Pip
 
 ```bash
-$ pip install --no-cache-dir nondefaced-detector[gpu]
+$ pip install --no-cache-dir nondefaced-detector[cpu/gpu]
 ```
 
 <!-- USAGE EXAMPLES -->
@@ -56,7 +62,7 @@ Pre-trained networks are avalaible in the *Nondefaced-detector* [models](https:/
 ```bash
 $ docker run --rm -v $PWD:/data nondefaced-detector:latest-cpu \
     predict \
-    --model-path=/opt/nondefaced-detector/nondefaced_detector/models/pretrained_weights \
+    --model-path=$MODEL_PATH \
     /data/example1.nii.gz
 ```
 
@@ -88,6 +94,7 @@ Steps to reproduce inference results from the paper.
 ```bash
 $ datalad clone https://gin.g-node.org/shashankbansal56/nondefaced-detector-reproducibility /opt/nondefaced-detector-reproducibility
 $ cd /opt/nondefaced-detector-reproducibility
+$ datalad get pretrained_weights/*
 $ datalad get test_ixi/tfrecords/*
 
 ```
@@ -105,12 +112,20 @@ $ conda activate tf-cpu
 ```bash
 $ git clone https://github.com/poldracklab/nondefaced-detector.git
 ```
-**Step 4:** Run the standalone inference script. The inference script uses the pre-trained model weights under `nondefaced_detector/models/pretrained_weights`
+**Step 4:** Run the standalone inference script.
 ```bash
 $ cd nondefaced-detector
 $ pip install -e .
 $ cd nondefaced_detector
-$ python inference.py <PATH_TO_TFRECORDS [/opt/nondefaced-detector-reproducibility/test_ixi/tfrecords]>
+$ python inference.py -h
+usage: inference.py [-h] tfrecords_path model_path
+
+positional arguments:
+  tfrecords_path  Path to tfrecords.
+  model_path      Path to pretrained model weights.
+
+optional arguments:
+  -h, --help      show this help message and exit
 ```
 
 ## Paper
@@ -148,7 +163,7 @@ Shashank Bansal - shashankbansal56@gmail.com
 
 
 <!-- ACKNOWLEDGEMENTS -->
-## Acknowledgements
+## Acknowledgements 
 
 ### Training Dataset
 The original model was trained on 980 defaced MRI scans from 36 different studies that are publicly available at [OpenNeuro.org](https://openneuro.org/)
