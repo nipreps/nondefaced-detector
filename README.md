@@ -35,7 +35,7 @@ We recommend using the latest *Nondefaced-detector* docker container, which incl
 The *Nondefaced-detector* GPU supported container uses the tensorflow-gpu as its base image. Please see the [official tensorflow docker install page](https://www.tensorflow.org/install/docker) for all of the CUDA and NVIDIA driver requirements.
 
 ```bash
-$ docker pull poldracklab/nondefaced-detector:latest-gpu
+$ docker pull shashankbansal56/nondefaced-detector:latest-gpu
 ```
 
 **CPU**
@@ -43,14 +43,14 @@ $ docker pull poldracklab/nondefaced-detector:latest-gpu
 This container can be used on most systems that have Docker/Singularity installed.
 
 ```bash
-$ docker pull poldracklab/nondefaced-detector:latest-cpu
+$ docker pull shashankbansal56/nondefaced-detector:latest-cpu
 ```
 NOTE: The CPU container will be very slow for training. We highly recommend that you use a GPU system.
 
 ### Pip
 
 ```bash
-$ pip install --no-cache-dir nondefaced-detector[cpu/gpu]
+$ pip install --no-cache-dir "nondefaced-detector[cpu/gpu]"
 ```
 
 <!-- USAGE EXAMPLES -->
@@ -62,8 +62,14 @@ Pre-trained networks are avalaible in the *Nondefaced-detector* [models](https:/
 ```bash
 $ docker run --rm -v $PWD:/data nondefaced-detector:latest-cpu \
     predict \
-    --model-path=$MODEL_PATH \
-    /data/example1.nii.gz
+    --model-path="/opt/nondefaced-detector-reproducibility/pretrained_weights" \
+    "/opt/nondefaced-detector-reproducibility/examples/faced/example1.nii.gz"
+
+$ docker run --rm --gpus all -v $PWD:/data nondefaced-detector:latest-gpu \
+    predict \
+    --model-path="/opt/nondefaced-detector-reproducibility/pretrained_weights" \
+    "/opt/nondefaced-detector-reproducibility/examples/faced/example1.nii.gz"
+
 ```
 
 ### From pip installation
