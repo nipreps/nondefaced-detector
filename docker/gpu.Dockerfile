@@ -10,7 +10,9 @@ RUN DEBIAN_FRONTEND="noninteractive" apt-get install -y vim \
 			git \
 			git-annex
 
-RUN pip3 install "nondefaced-detector[gpu]"
+COPY [".", "/opt/nondefaced-detector"]
+
+RUN pip3 install --no-cache-dir --editable "/opt/nondefaced-detector[gpu]"
 
 RUN git config --global user.email "detector@nondefaced.com"
 RUN git config --global user.name "nondefaced-detector"

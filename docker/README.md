@@ -36,4 +36,4 @@ sudo singularity build nondefaced-detector.sif docker-archive://local.tar
 
 ## Pre-built singularity images
 
-You can also find pre-built singularity images here: [https://gin.g-node.org/shashankbansal56/nondefaced-detector-reproducibility/singularity](https://gin.g-node.org/shashankbansal56/nondefaced-detector-reproducibility/singularity)
+You can also find pre-built singularity images here: [https://gin.g-node.org/shashankbansal56/nondefaced-detector-reproducibility/src/master/singularity](https://gin.g-node.org/shashankbansal56/nondefaced-detector-reproducibility/src/master/singularity)
