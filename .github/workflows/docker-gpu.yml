@@ -1,12 +1,12 @@
-name: Build and push docker images
+name: Build and push gpu docker image
 
-on: [push, pull_request]
-# push:
-#   branches:
-#     - 'master'
-# pull_request:
-#   branches:
-#     - 'master'
+on:
+  push:
+    branches:
+      - 'master'
+  pull_request:
+    branches:
+      - 'master'
 
 jobs:
   docker:
@@ -28,14 +28,14 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
-        name: Build and push cpu image
+        name: Build and push gpu image
         id: docker_build
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./docker/cpu.Dockerfile
+          file: ./docker/gpu.Dockerfile
           push: true
-          tags: shashankbansal56/nondefaced-detector:latest-cpu
+          tags: shashankbansal56/nondefaced-detector:latest-gpu
       -
         name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
