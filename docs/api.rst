@@ -8,7 +8,6 @@ API Reference
 
 .. autosummary:: nondefaced_detector.models
    :toctree: generated/
-   :template: function.rst
 
    nondefaced_detector.models.model.ConvBNrelu
    nondefaced_detector.models.model.TruncatedSubmodel
@@ -24,10 +23,6 @@ API Reference
 :mod:`nondefaced_detector.dataloaders`: Dataset functions
 ----------------------------------------------------------
 
-.. automodule:: nondefaced_detector.dataloaders
-   :no-members:
-   :no-inherited-members:
-
 .. autosummary:: nondefaced_detector.dataloaders
    :toctree: generated/
 
@@ -40,10 +35,6 @@ API Reference
 
 :mod:`nondefaced_detector.preprocess`: Preprocess input volumes
 ----------------------------------------------------------------
-
-.. automodule:: nondefaced_detector.preprocess
-   :no-members:
-   :no-inherited-members:
 
 .. autosummary:: nondefaced_detector.preprocess
    :toctree: generated/
@@ -58,10 +49,6 @@ API Reference
 
 :mod:`nondefaced_detector.preprocessing`: Helper functions for the preprocess module
 -------------------------------------------------------------------------------------
-
-.. automodule:: nondefaced_detector.preprocessing
-   :no-members:
-   :no-inherited-members:
 
 .. autosummary:: nondefaced_detector.preprocessing
    :toctree: generated/
@@ -79,10 +66,6 @@ API Reference
 :mod:`nondefaced_detector.training`: Training
 ------------------------------------------------
 
-.. automodule:: nondefaced_detector.training
-   :no-members:
-   :no-inherited-members:
-
 .. autosummary:: nondefaced_detector.training
    :toctree: generated/
 
@@ -95,10 +78,6 @@ API Reference
 
 :mod:`nondefaced_detector.prediction`: Making predictions
 ----------------------------------------------------------
-
-.. automodule:: nondefaced_detector.prediction
-   :no-members:
-   :no-inherited-members:
 
 .. autosummary:: nondefaced_detector.prediction
    :toctree: generated/
@@ -114,10 +93,6 @@ API Reference
 :mod:`nondefaced_detector.inference`: Inference
 ------------------------------------------------
 
-.. automodule:: nondefaced_detector.inference
-   :no-members:
-   :no-inherited-members:
-
 .. autosummary:: nondefaced_detector.inference
    :toctree: generated/
 
@@ -129,10 +104,6 @@ API Reference
 
 :mod:`nondefaced_detector.helpers`: Helper functions
 -----------------------------------------------------
-
-.. automodule:: nondefaced_detector.helpers
-   :no-members:
-   :no-inherited-members:
 
 .. autosummary:: nondefaced_detector.helpers
    :toctree: generated/
@@ -148,10 +119,6 @@ API Reference
 
 :mod:`nondefaced_detector.utils`: Utility functions
 -----------------------------------------------------
-
-.. automodule:: nondefaced_detector.utils
-   :no-members:
-   :no-inherited-members:
 
 .. autosummary:: nondefaced_detector.utils
    :toctree: generated/
