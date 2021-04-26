@@ -1,0 +1,5 @@
+recursive-exclude docker/ *
+recursive-exclude docs/ *
+recursive-exclude tools/ *
+recursive-exclude .github/ *
+exclude .gitignore .readthedocs.yaml .git_archival.txt .gitattributes .pre-commit-config.yaml

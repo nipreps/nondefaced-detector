@@ -11,7 +11,28 @@ import nibabel as nb
 def conform_data(
     in_file, out_file=None, out_size=(256, 256, 256), out_zooms=(1.0, 1.0, 1.0), order=3
 ):
-    """Conform the input dataset to the canonical orientation."""
+    """Conform the input dataset to the canonical orientation.
+
+    Parameters
+    ----------
+    in_file: str - Path
+        Path to the input MRI volume to conform.
+    out_file: str - Path, default=None
+        Path to save the conformed volume. By default the
+        volume is saved as /tmp/conformed.nii.gz
+    out_size: tuple of size 3, optional, default=(256, 256, 256)
+        The shape to conform the 3D volume to.
+    out_zooms: tuple of size 3, optional, default=(1.0, 1.0, 1.0)
+        Factors to normalize voxel size to.
+    order: int, optional, default=3
+        Order of the spline interpolation. The order has to be in
+        the range 0-5.
+
+    Returns
+    -------
+    str - Path
+        The path to where the conformed volume is saved.
+    """
 
     if isinstance(in_file, (str, Path)):
         in_file = nb.load(in_file)

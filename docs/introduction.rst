@@ -12,9 +12,9 @@ What is nondefaced-detector and why should you use it?
 =======================================================
 
 .. topic:: **Why use nondefaced-detector?**
+
   The Nondefaced-detector is an automated framework to detect nondefaced
   T1-weighted images of the human brain.
-
 
 Installing nondefaced-detector
 ==============================
@@ -29,7 +29,7 @@ the GitHub repository::
 >>> pip install git+https://github.com/poldracklab/nondefaced-detector.git
 
 Finding help
-==============
+=============
 
 :Mailing lists and forums:
 

@@ -1,4 +1,4 @@
-"""Run inference on held-out test dataset."""
+"""Standalone inference script for held-out test dataset."""
 
 import argparse
 import os
@@ -12,6 +12,23 @@ from nondefaced_detector.dataloaders.dataset import get_dataset
 
 
 def inference(tfrecords_path, weights_path, wts_root):
+    """ Inference function to reproduce original model scores. This
+    script can be run as a standalone using python inference.py.
+    For more information try: `python inference.py -h`
+
+    Parameters
+    ----------
+    tfrecords_path: str
+        The path to directory containing preprocessed tfrecords.
+    weights_path: str
+        The path to the combined model weights. A copy of the
+        weights can be found here:
+        https://gin.g-node.org/shashankbansal56/nondefaced-detector-reproducibility/src/master/pretrained_weights/combined
+    wts_root: str
+        The path to the root directory of all the model weights.
+        A copy of the weights can be found here:
+        https://gin.g-node.org/shashankbansal56/nondefaced-detector-reproducibility/src/master/pretrained_weights
+    """
 
     model = CombinedClassifier(
         input_shape=(128, 128), dropout=0.4, wts_root=wts_root, trainable=False

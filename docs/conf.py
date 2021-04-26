@@ -18,6 +18,7 @@ import sphinx_rtd_theme
 from datetime import date
 
 sys.path.insert(0, os.path.abspath("../"))
+sys.path.insert(0, os.path.abspath("nondefaced_detector"))
 
 import nondefaced_detector
 
@@ -25,8 +26,8 @@ import nondefaced_detector
 # -- Project information -----------------------------------------------------
 
 project = "nondefaced-detector"
-copyright = "2021-{}, Developers of Nondefaced-Detector".format(date.today().year)
-author = "Developers of Nondefaced-Detector"
+copyright = "2021-{}, Developers of nondefaced-detector".format(date.today().year)
+author = "Developers of nondefaced-detector"
 
 currentdir = os.path.abspath(os.path.dirname(__file__))
 currentdir = os.path.abspath(os.path.dirname(__file__))
@@ -63,6 +64,14 @@ intersphinx_mapping = {
 
 intersphinx_timeout = 5
 
+# If your documentation needs a minimal Sphinx version, state it here.
+needs_sphinx = "2.2.0"
+
+# Generate stubs
+autosummary_generate = True
+autodoc_default_flags = ["members", "inherited-members"]
+add_module_names = False
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
 
@@ -98,6 +107,9 @@ html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
 
+# If false, no module index is generated.
+html_domain_indices = False
+
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
@@ -118,3 +130,6 @@ texinfo_documents = [
         "Miscellaneous",
     )
 ]
+
+# If false, no module index is generated.
+texinfo_domain_indices = False

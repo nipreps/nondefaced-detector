@@ -5,12 +5,15 @@ import os
 import tempfile
 
 import multiprocessing as mp
+import tensorflow as tf
 
 from tqdm import tqdm
 
 from nondefaced_detector.preprocessing.conform import conform_data
 from nondefaced_detector.helpers import utils
 from nondefaced_detector.preprocessing.normalization import clip, normalize, standardize
+
+AUTOTUNE = tf.data.experimental.AUTOTUNE
 
 
 def preprocess(
@@ -20,6 +23,30 @@ def preprocess(
     save_path=None,
     with_label=False,
 ):
+    """Preprocess input volumes before prediction.
+
+    Parameters
+    ----------
+    vol_path : str - Path or tuple of length 2 (str - Path, int)
+        The path to the input volume. If the `with_label` flag is True, the
+        vol_path is required to be a tuple of size 2 - (vol_path, label)
+    conform_volume_to : tuple of length 3, optional, default=(128 128, 128)
+        The shape the volume will be conformed to. Note: The pretrained model
+        was trained using the conform size of (128, 128, 128) and assumes the
+        volume shape as such.
+    save_path : str - Path, optional
+        The path where the output volume is saved. If none is provided, the
+        output volume will be saved under `vol_path/preprocessed`
+    with_label: bool, optional
+        If True, the input vol_path is required to be a tuple of 2
+        (vol_path, label)
+
+    Returns
+    -------
+    str - Path
+        Path to the where the preprocessed volume is stored.
+        (Path, label) if with_label is True.
+    """
 
     try:
         vpath = vol_path
@@ -72,12 +99,39 @@ def preprocess(
 
 def preprocess_parallel(
     volume_filepaths,
-    num_parallel_calls=None,
+    num_parallel_calls=AUTOTUNE,
     conform_volume_to=(128, 128, 128),
     conform_zooms=(2.0, 2.0, 2.0),
     save_path=None,
     with_label=True,
 ):
+    """Preprocess multiple input volumes before prediction in parallel.
+
+    Parameters
+    ----------
+    volume_filepaths: list of str - Path or list of tuple of length 2 [(str - Path, int), ...]
+        A list of paths to the input volumes. If the `with_label` flag is True, the
+        volume_filepaths is required to be a list of tuples of size 2 - (volume_filepath, label)
+    num_parallel_calls: int
+        Number of parallel calls to make for preprocessing.
+    conform_volume_to: tuple of length 3, optional, default=(128 128, 128)
+        The shape the volume will be conformed to. Note: The pretrained model
+        was trained using the conform size of (128, 128, 128) and assumes the
+        volume shape as such.
+    conform_zooms: tuple of size 3, optional, default=(2.0, 2.0, 2.0)
+        The zoom of the resampled output.
+    save_path: str - Path, optional
+        The path where the output volume is saved. If none is provided, the
+        output volume will be saved under `volume_filepath/preprocessed`
+    with_label: bool, optional
+        If True, each volume_filepath is required to be a tuple of 2 (volume_filepath, label)
+
+    Returns
+    -------
+    list of str
+        List of str paths to the where each preprocessed volume is stored.
+        [(Path, label), ...] if with_label is True.
+    """
 
     try:
         if with_label:
@@ -124,6 +178,7 @@ def preprocess_parallel(
 
 
 def cleanup_files(*args):
+    """ Function to remove temp files created during preprocessing."""
     for p in args:
         if os.path.exists(p):
             os.remove(p)

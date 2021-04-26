@@ -13,15 +13,22 @@ from nondefaced_detector.models.model import CombinedClassifier
 
 
 def _predict(volume, model, n_slices=32):
-    """Return predictions from `inputs`.
-
-    This is a general prediction method.
+    """Return prediction from input volume.
+    This is a helper function for the predict method.
 
     Parameters
-    ---------
+    ----------
+    volume: :obj:`np.ndarray`
+        The nifti volume loaded as a numpy ndarray.
+    model: :obj:`tf.keras.Model`
+        The pretrained keras model loaded with weights.
+    n_slices: int, optional, default=32
+        The number of slices of the MRI volume to predict on.
 
     Returns
-    ------
+    -------
+    float
+        The predicted probability label from the sigmoid function.
     """
 
     if not isinstance(volume, (np.ndarray)):
@@ -37,6 +44,23 @@ def _predict(volume, model, n_slices=32):
 
 
 def predict(volumes, model_path, n_slices=32):
+    """Return predictions from a list of input volumes.
+
+    Parameters
+    ----------
+    volumes: list
+        A list of Path like strings to the volumes to make the
+        prediction on.
+    model_path: str - Path
+        The path to pretrained model weights.
+    n_slices: int, optional, default=32
+        The number of 2D slices of the MRI volume to predict on.
+
+    Returns
+    -------
+    list
+        A list of predicted probabilities.
+    """
 
     if not isinstance(volumes, list):
         raise ValueError(
@@ -56,19 +80,26 @@ def predict(volumes, model_path, n_slices=32):
 
 
 def _structural_slice(x, plane, n_slices=16):
-
-    """Transpose dataset based on the plane
+    """Transpose dataset and get slices from the volume based on
+    the plane.
 
     Parameters
     ----------
-    x:
-
-    plane:
-
-    n_slices:
+    x: :obj:`tf.Tensor`
+        The input MRI volume/dataset to sample slices from.
+    plane: one of ["sagittal", "coronal", "axial", "combined"]
+        The axes of the plane to get the slices for. If "combined", the
+        input is sliced for all 3 axes.
+    n_slices: int, optional, default=16
+        The number of 2D slices to cut along the input plane. n_slices are
+        randomly sampled from the input volume.
 
     Returns
     -------
+    :obj:`tf.Tensor`
+        A tensor of shape (n_slices, x.shape) or
+        A dict with keys ['sagittal', 'coronal', 'axial'] each with a value
+        of tensors of shape (n_slices, x.shape)
     """
 
     options = ["sagittal", "coronal", "axial", "combined"]
@@ -107,12 +138,11 @@ def _structural_slice(x, plane, n_slices=16):
 
 
 def _get_model(model_path):
-
     """Return `tf.keras.Model` object from a filepath.
 
     Parameters
     ----------
-    path: str, path to HDF5 or SavedModel file.
+    model_path: str, path to HDF5 or SavedModel file.
 
     Returns
     -------

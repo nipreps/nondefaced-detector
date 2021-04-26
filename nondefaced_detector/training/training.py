@@ -29,15 +29,46 @@ def train(
     csv_path,
     model_save_path,
     tfrecords_path,
-    volume_shape=(64, 64, 64),
-    image_size=(64, 64),
+    volume_shape=(128, 128, 128),
+    image_size=(128, 128),
     dropout=0.2,
     batch_size=16,
     n_classes=2,
     n_epochs=15,
-    percent=100,
     mode="CV",
 ):
+    """Train a model.
+
+    Parameters
+    ----------
+    csv_path: str - Path
+        Path to the csv file containing training volume paths, labels (X, Y).
+    model_save_path: str - Path
+        Path to where the save model and model weights.
+    tfrecords_path: str - Path
+        Path to preprocessed training tfrecords.
+    volume_shape: tuple of size 3, optional, default=(128, 128, 128)
+        The shape of the preprocessed volumes.
+    image_size: tuple of size 2, optional, default=(128, 128)
+        The shape of a 2D slice along each volume axis.
+    dropout: float, optional, default=0.4
+         Float between 0 and 1. Fraction of the input units to drop.
+    batch_size: int, optional, default=16
+        No. of training examples utilized in each iteration.
+    n_classes: int, optional, default=2
+        No. of unique classes to train the model on. Default assumption is a
+        binary classifier.
+    n_epochs: int, optional, default=15
+        No. of complete passes through the training dataset.
+    mode: str, optional, default=15
+        One of "CV" or "full". Indicates the type of training to perform.
+
+    Returns
+    -------
+    `tf.keras.callbacks.History`
+        A History object that records several metrics such as training/validation loss/metrics
+        at successive epochs.
+    """
 
     train_csv_path = os.path.join(csv_path, "training.csv")
     train_paths = pd.read_csv(train_csv_path)["X"].values
