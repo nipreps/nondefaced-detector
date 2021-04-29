@@ -1,5 +1,7 @@
 # Nondefaced-Detector
 
+[![DOI](https://img.shields.io/badge/DOI-10.1101%2F2021.04.25.441373%20-blue.svg)](https://doi.org/10.1101/2021.04.25.441373)
+
 [![PyPI version](https://badge.fury.io/py/nondefaced-detector.svg)](https://badge.fury.io/py/nondefaced-detector)
 [![Downloads](https://pepy.tech/badge/nondefaced-detector)](https://pepy.tech/project/nondefaced-detector)
 [![Documentation Status](https://readthedocs.org/projects/nondefaced-detector/badge/?version=latest)](https://nondefaced-detector.readthedocs.io/en/latest/?badge=latest)
@@ -15,6 +17,7 @@ A framework to detect if a 3D MRI volume has been defaced.
   - [Pip](#pip)
 - [Using pre-trained networks](#using-pre-trained-networks)
 - [Reproducibility](#reproducibility)
+- [Usage](#usage)
 - [Paper](#paper)
 - [Roadmap](#roadmap)
 - [Questions or Issues](#questions-or-issues)
@@ -134,7 +137,10 @@ optional arguments:
   -h, --help      show this help message and exit
 ```
 
+## Usage
+Get started by checking out the [documentation](https://nondefaced-detector.readthedocs.io/en/latest/)!
 ## Paper
+You can find the pre-print on [bioRxiv](https://www.biorxiv.org/content/10.1101/2021.04.25.441373v1).
 
 ## Roadmap
 
