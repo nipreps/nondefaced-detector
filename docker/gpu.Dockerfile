@@ -1,12 +1,9 @@
-FROM ubuntu:20.04
+FROM nvcr.io/nvidia/tensorflow:21.08-tf2-py3
 
 RUN apt-get update -y && apt-get upgrade -y
 
 RUN DEBIAN_FRONTEND="noninteractive" apt-get install -y vim \
 			wget \
-			netbase \
-			python3 \
-			python3-pip \
 			git \
 			git-annex
 

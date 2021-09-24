@@ -93,7 +93,7 @@ def ClassifierHead(layer, dropout):
 
 
 def Submodel(
-    root_path,
+    root_path="",
     input_shape=(32, 32),
     dropout=0.4,
     name="axial",
@@ -172,26 +172,25 @@ def CombinedClassifier(
     """
 
     axial_features = Submodel(
-        input_shape,
-        dropout,
+        input_shape=input_shape,
+        dropout=dropout,
         name="axial",
         weights=None,
         include_top=False,
-        root_path=wts_root,
     )
 
     if not shared:
         sagittal_features = Submodel(
-            input_shape,
-            dropout,
+            input_shape=input_shape,
+            dropout=dropout,
             name="sagittal",
             weights=None,
             include_top=False,
             root_path=wts_root,
         )
         coronal_features = Submodel(
-            input_shape,
-            dropout,
+            input_shape=input_shape,
+            dropout=dropout,
             name="coronal",
             weights=None,
             include_top=False,
